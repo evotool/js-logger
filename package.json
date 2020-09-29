@@ -9,7 +9,7 @@
 		"build": "tsc --diagnostics --project tsconfig.build.json && node build.js",
 		"postbuild": "mkdir -p node_modules/@evojs/ && cp -r dist/ node_modules/@evojs/logger/",
 		"prepublishOnly": "npm run build && node prepublish.js",
-		"release": "RELEASE_MODE=1 npm run prepublishOnly && npm publish dist/",
+		"release": "RELEASE_MODE=1 npm run prepublishOnly && npm publish --access public dist/",
 		"pretest": "npm run build",
 		"test": "jest --detectOpenHandles --config test/jest.json",
 		"fix": "eslint \"src/**/*.ts\" --fix --ext .ts",
