@@ -4,16 +4,6 @@ Smart logger for nodejs
 
 ![@evojs/logger npm version](https://img.shields.io/npm/v/@evojs/logger.svg) ![supported node version for @evojs/logger](https://img.shields.io/node/v/@evojs/logger.svg) ![total npm downloads for @evojs/logger](https://img.shields.io/npm/dt/@evojs/logger.svg) ![monthly npm downloads for @evojs/logger](https://img.shields.io/npm/dm/@evojs/logger.svg) ![npm licence for @evojs/logger](https://img.shields.io/npm/l/@evojs/logger.svg)
 
-## Upgrade to v4.0.0
-
-Logger v4 is now even faster and more convenient! No vulnerabilities and no dependencies!
-
-1. Updated pipe resolving method;
-2. Optimized code;
-3. Removed implied eval function;
-4. Removed unused features (inspect).
-5. Removed all dependencies!
-
 ## Usage example
 
 ### Set global configuration
