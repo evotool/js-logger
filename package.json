@@ -1,0 +1,47 @@
+{
+	"name": "@evojs/logger",
+	"version": "0.0.0",
+	"description": "Evojs logger",
+	"main": "index.js",
+	"typings": "index.d.ts",
+	"scripts": {
+		"prebuild": "rm -rf dist/ node_modules/@evojs/logger/",
+		"build": "tsc --diagnostics --project tsconfig.build.json && node build.js",
+		"postbuild": "mkdir -p node_modules/@evojs/ && cp -r dist/ node_modules/@evojs/logger/",
+		"prepublishOnly": "npm run build && node prepublish.js",
+		"release": "RELEASE_MODE=1 npm run prepublishOnly && npm publish dist/",
+		"pretest": "npm run build",
+		"test": "jest --detectOpenHandles --config test/jest.json",
+		"fix": "eslint \"src/**/*.ts\" --fix --ext .ts",
+		"lint": "eslint \"src/**/*.ts\" -f codeframe"
+	},
+	"devDependencies": {
+		"@types/jest": "^26.0.14",
+		"@types/node": "^14.11.2",
+		"@typescript-eslint/eslint-plugin": "^4.3.0",
+		"@typescript-eslint/parser": "^4.3.0",
+		"eslint": "^7.10.0",
+		"eslint-plugin-import": "^2.22.1",
+		"jest": "^26.4.2",
+		"ts-jest": "^26.4.1",
+		"typescript": "^4.0.3"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "Shamil Sultanov",
+		"email": "evo@sultanov.io",
+		"url": "http://evo.sultanov.io"
+	},
+	"keywords": [
+		"evojs",
+		"logger"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/evotool/js-logger.git"
+	},
+	"bugs": {
+		"url": "https://github.com/evotool/js-logger/issues"
+	},
+	"homepage": "https://github.com/evotool/js-logger#readme"
+}
