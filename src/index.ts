@@ -1,9 +1,7 @@
-import { Level, Metadata, Pipes, Record } from './record';
+import { Level, Meta, Pipes, Record } from './record';
 
 export * from './record';
 export * from './caller';
-
-export const $metadata = Symbol('metadata');
 
 Record.fromFileName = __filename;
 
@@ -13,80 +11,62 @@ export default class Logger {
 	static readonly CONSOLE_METHODS_KEYS: ConsoleMethods[] = ['log', 'info', 'error', 'dir', 'warn', 'debug', 'trace'];
 	static readonly CONSOLE_METHODS: { [methodName: string]: (...args: any[]) => void } = {};
 
-	static debugMode: boolean = true;
-	static logname?: string | undefined;
+	protected static _logname?: string | undefined;
+	protected static readonly _meta: Meta = {};
+	protected static readonly _pipes: Pipes = {};
+	protected static readonly _formats: string[] = [];
+	protected static _debugMode: boolean = true;
+	protected static _handler = (record: Record): void => {};
 
-	static readonly metadata: Metadata = {};
-	static readonly pipes: Pipes = {};
-	static readonly formats: string[] = [];
-	static handler(this: LoggerOptions, record: Record): void {}
-
-	private static handle(instance: LoggerInstance, level: Level, args: any[]): void {
-		const metadata = this.getMetadata(instance);
-		const { logname, formats, pipes, handler } = instance;
-		Record.lineLength = process.stdout.columns;
-
-		const record: Record = new Record(logname, formats, pipes, metadata, level, args);
-		handler.call({
-			logname,
-			formats,
-			pipes,
-			metadata,
-		} as LoggerOptions, record);
+	protected static _handle(instance: typeof Logger | Logger, level: Level, args: any[]): void {
+		const { _logname: logname, _formats: formats, _pipes: pipes, _handler: handler } = instance as unknown as LoggerInstance;
+		const meta = this._getMeta(instance);
+		const record = new Record(logname, formats, pipes, meta, level, args);
+		handler.call({}, record);
 	}
 
-	private static getMetadata(instance?: LoggerInstance): Metadata {
+	protected static _getMeta(instance?: typeof Logger | Logger): Meta {
 		if (!instance || instance === this) {
-			return { ...this.metadata };
+			return { ...this._meta };
 		}
 
-		return {
-			...this.metadata,
-			...instance.metadata,
-			...(instance as { [$metadata]: Metadata })[$metadata] as Metadata,
-		};
+		return { ...this._meta, ...(instance as unknown as LoggerInstance)._meta };
 	}
 
 	static configure(options: LoggerOptions): void {
-		if (typeof options === 'object' && options !== null) {
-			if (options.name) {
-				this.logname = options.name;
-			}
+		if (options.name) {
+			this._logname = options.name;
+		}
 
-			if (options.debug) {
-				this.debugMode = true;
-			}
+		if (options.debug) {
+			this._debugMode = true;
+		}
 
-			if (Array.isArray(options.formats)) {
-				this.formats.splice(0, this.formats.length, ...options.formats);
-			}
+		if (Array.isArray(options.formats)) {
+			this._formats.splice(0, this._formats.length, ...options.formats);
+		}
 
-			if (options.pipes && typeof options.pipes === 'object') {
-				Object.assign(this.pipes, options.pipes);
-			}
+		if (options.pipes && typeof options.pipes === 'object') {
+			Object.assign(this._pipes, options.pipes);
+		}
 
-			if (options.metadata && typeof options.metadata === 'object') {
-				Object.assign(this.metadata, options.metadata);
-			}
+		if (options.meta && typeof options.meta === 'object') {
+			Object.assign(this._meta, options.meta);
+		}
 
-			if (typeof options.handler === 'function') {
-				this.handler = options.handler;
-			}
+		if (typeof options.handler === 'function') {
+			this._handler = options.handler;
 		}
 	}
 
 	static overrideConsole(): void {
-		Object.defineProperty(console, 'logger', {
-			value: Logger,
-			writable: false,
-		});
+		Object.defineProperty(console, 'logger', { value: Logger, writable: false });
 
 		for (const m of this.CONSOLE_METHODS_KEYS) {
 			console[m] = Logger[m].bind(Logger);
 		}
 
-		console.meta = (metadata: Metadata): Logger => Logger.meta(metadata);
-
+		console.meta = (meta: Meta): Logger => Logger.meta(meta);
 		console.name = (name: string): Logger => Logger.useName(name);
 
 		process.on('uncaughtException', (err) => {
@@ -99,177 +79,175 @@ export default class Logger {
 		return new Logger({ name });
 	}
 
-	static meta(metadata: Metadata): Logger {
+	static meta(meta: Meta): Logger {
 		const logger = new Logger();
-		Object.assign(logger[$metadata], metadata || {});
+		Object.assign(logger._meta, Logger._meta, meta);
 
 		return logger;
 	}
 
 	static log(...args: any[]): void {
-		this.handle(this, 'debug', args);
+		this._handle(this, 'debug', args);
 	}
 
 	static debug(...args: any[]): void {
-		if (this.debugMode) {
-			this.handle(this, 'debug', args);
+		if (this._debugMode) {
+			this._handle(this, 'debug', args);
 		}
 	}
 
 	static info(...args: any[]): void {
-		this.handle(this, 'info', args);
+		this._handle(this, 'info', args);
 	}
 
 	static warn(...args: any[]): void {
-		this.handle(this, 'warn', args);
+		this._handle(this, 'warn', args);
 	}
 
 	static trace(...args: any[]): void {
-		this.handle(this, 'trace', args);
+		this._handle(this, 'trace', args);
 	}
 
 	static error(...args: any[]): void {
-		this.handle(this, 'error', args);
+		this._handle(this, 'error', args);
 	}
 
 	static critical(...args: any[]): void {
-		this.handle(this, 'critical', args);
+		this._handle(this, 'critical', args);
 	}
 
 	static dir(...args: any[]): void {
-		this.handle(this, 'verbose', args);
+		this._handle(this, 'verbose', args);
 	}
 
-	readonly logname?: string;
-	readonly [$metadata]: Metadata = {};
-	readonly metadata: Metadata = {};
-	readonly pipes: Pipes = {};
-	readonly formats: string[] = [];
-	readonly debugMode: boolean = true;
+	protected readonly _logname: string | undefined;
+	protected readonly _meta: Meta = {};
+	protected readonly _pipes: Pipes = {};
+	protected readonly _formats: string[];
+	protected readonly _debugMode: boolean;
 
 	constructor(options?: LoggerOptions) {
-		if (typeof options === 'object' && options !== null) {
-			if (options.name) {
-				this.logname = options.name;
-			} else {
-				this.logname = Logger.logname;
-			}
+		Object.assign(this._meta, Logger._meta);
+		Object.assign(this._pipes, Logger._pipes);
+		this._handler = Logger._handler;
+		this._logname = Logger._logname;
+		this._formats = Array.from(Logger._formats);
+		this._debugMode = Logger._debugMode;
 
-			this.debugMode = typeof options.debug === 'boolean' ? options.debug : Logger.debugMode;
+		if (!options) {
+			return;
+		}
 
-			if (Array.isArray(options.formats)) {
-				this.formats.splice(0, this.formats.length, ...options.formats);
-			} else {
-				this.formats.splice(0, this.formats.length, ...Logger.formats);
-			}
+		if (options.name) {
+			this._logname = options.name;
+		}
 
-			if (options.pipes && typeof options.pipes === 'object') {
-				Object.assign(this.pipes, options.pipes);
-			} else {
-				Object.assign(this.pipes, Logger.pipes);
-			}
+		if (typeof options.debug === 'boolean') {
+			this._debugMode = options.debug;
+		}
 
-			if (options.metadata && typeof options.metadata === 'object') {
-				Object.assign(this.metadata, options.metadata);
-			} else {
-				Object.assign(this.metadata, Logger.metadata);
-			}
+		if (Array.isArray(options.formats)) {
+			this._formats = Array.from(options.formats);
+		}
 
-			if (typeof options.handler === 'function') {
-				this.handler = options.handler;
-			} else {
-				this.handler = Logger.handler;
-			}
-		} else {
-			this.logname = Logger.logname;
-			this.formats.splice(0, this.formats.length, ...Logger.formats);
-			Object.assign(this.pipes, Logger.pipes);
-			Object.assign(this.metadata, Logger.metadata);
-			this.handler = Logger.handler;
+		if (options.pipes) {
+			Object.assign(this._pipes, options.pipes);
+		}
+
+		if (options.meta) {
+			Object.assign(this._meta, options.meta);
+		}
+
+		if (typeof options.handler === 'function') {
+			this._handler = options.handler;
 		}
 	}
 
-	handler(this: LoggerOptions, record: Record): void {}
+	private readonly _handler = (record: Record): void => {};
 
 	name(name: string): Logger {
 		const logger = this.clone();
-		Object.defineProperty(logger, 'logname', {
-			value: logger.logname && name ? `${logger.logname}.${name}` : (name || logger.logname),
+
+		Object.defineProperty(logger, '_logname', {
+			value: logger._logname && name ? `${logger._logname}.${name}` : (name || logger._logname),
 			writable: false,
 		});
 
 		return logger;
 	}
 
-	meta(metadata: Metadata): void {
-		Object.assign(this[$metadata], metadata || {});
+	meta(meta: Meta): void {
+		Object.assign(this._meta, meta);
 	}
 
 	clone(): Logger {
-		const logger = new Logger({
-			name: this.logname,
-			metadata: this.metadata,
-			formats: this.formats,
-			pipes: this.pipes,
-			handler: this.handler,
+		return new Logger({
+			name: this._logname,
+			meta: this._meta,
+			formats: this._formats,
+			pipes: this._pipes,
+			handler: this._handler,
 		});
-
-		Object.assign(logger[$metadata], this[$metadata]);
-
-		return logger;
 	}
 
 	log(...args: any[]): void {
-		Logger.handle(this, 'debug', args);
+		Logger._handle(this, 'debug', args);
 	}
 
 	debug(...args: any[]): void {
-		if (Logger.debugMode) {
-			Logger.handle(this, 'debug', args);
+		if (Logger._debugMode) {
+			Logger._handle(this, 'debug', args);
 		}
 	}
 
 	info(...args: any[]): void {
-		Logger.handle(this, 'info', args);
+		Logger._handle(this, 'info', args);
 	}
 
 	warn(...args: any[]): void {
-		Logger.handle(this, 'warn', args);
+		Logger._handle(this, 'warn', args);
 	}
 
 	trace(...args: any[]): void {
-		Logger.handle(this, 'trace', args);
+		Logger._handle(this, 'trace', args);
 	}
 
 	error(...args: any[]): void {
-		Logger.handle(this, 'error', args);
+		Logger._handle(this, 'error', args);
 	}
 
 	critical(...args: any[]): void {
-		Logger.handle(this, 'critical', args);
+		Logger._handle(this, 'critical', args);
 	}
 
 	dir(...args: any[]): void {
-		Logger.handle(this, 'verbose', args);
+		Logger._handle(this, 'verbose', args);
 	}
 }
 
 declare global {
 	interface Console {
 		logger: typeof Logger;
-		meta(metadata: Metadata): Logger;
+		meta(meta: Meta): Logger;
 		name(name: string): Logger;
 	}
 }
 
-export type LoggerInstance = (Logger | typeof Logger);
+interface LoggerInstance {
+	_logname: string | undefined;
+	_meta: Meta;
+	_pipes: Pipes;
+	_formats: string[];
+	_debugMode: boolean;
+	_handler(record: Record): void;
+}
 
 export interface LoggerOptions {
 	name?: string;
-	metadata?: Metadata;
+	meta?: Meta;
 	formats?: string[];
 	pipes?: Pipes;
-	handler?(this: LoggerOptions, record: Record): void;
+	handler?(record: Record): void;
 	debug?: boolean;
 }
 

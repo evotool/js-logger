@@ -1,13 +1,55 @@
-import Logger, { Caller, Record } from '@evojs/logger';
+/* eslint-disable dot-notation */
 import { inspect } from 'util';
+
+import Logger, { Caller, Record } from '../src';
 
 describe('index', () => {
 	let record!: Record;
-	it('should be configure default Logger options', (done) => {
-		expect(Logger.logname).toBeUndefined();
+
+	it('should test all basic methods', (done) => {
+		Logger.configure({
+			debug: false,
+		});
+		Logger.debug();
+		Logger.configure({
+			debug: true,
+		});
+		Logger.log();
+		Logger.info();
+		Logger.error();
+		Logger.dir();
+		Logger.warn();
+		Logger.debug();
+		Logger.trace();
+		Logger.critical();
+
+		let logger = new Logger({ debug: true });
+		logger['_handler'].call({}, new Record(undefined, [], {}, {}, 'info', [], Date.now()));
+		logger.meta({});
+		logger.log();
+		logger.info();
+		logger.error();
+		logger.dir();
+		logger.warn();
+		logger.debug();
+		logger.trace();
+		logger.critical();
+
+		logger = new Logger({ debug: false });
+		logger.debug();
+
+		logger = Logger.useName('test');
+		expect(logger['_logname']).toBe('test');
+		logger = logger.name('');
+		expect(logger['_logname']).toBe('test');
+		done();
+	});
+
+	it('should configure default Logger options', (done) => {
+		expect(Logger['_logname']).toBeUndefined();
 		Logger.configure({
 			name: 'app',
-			metadata: { appId: 'test' },
+			meta: { appId: 'test' },
 			formats: [
 				`{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}`,
 				'json',
@@ -33,7 +75,8 @@ describe('index', () => {
 				record = r;
 			},
 		});
-		expect(Logger.logname).toBe('app');
+		expect(Logger['_logname']).toBe('app');
+
 		done();
 	});
 
@@ -48,16 +91,13 @@ describe('index', () => {
 			.name('test')
 			.log('test message');
 		expect(record.name).toBe('app.test');
-		expect(record.metadata.test).toBe(1);
+		expect(record.meta.test).toBe(1);
+
+		const logger = console.name('test');
+		expect(logger['_logname']).toBe('test');
 
 		const [consoleMessage, json] = record.messages();
-		Logger.CONSOLE_METHODS.log.call(console, consoleMessage);
-		Logger.CONSOLE_METHODS.log.call(console, json);
-		expect(
-			(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z DEBUG \<app\.test\> test message\s+.+:\d+:\d+$/).test(
-				consoleMessage,
-			),
-		).toBeTruthy();
+		expect((/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z DEBUG <app\.test> test message\s+.+:\d+:\d+$/).test(consoleMessage)).toBe(true);
 
 		const obj = JSON.parse(json);
 		expect(obj).toBeDefined();

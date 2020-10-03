@@ -1,6 +1,7 @@
 import { Caller } from './caller';
+import { resolveSeparators } from './utils';
 
-export interface Metadata {
+export interface Meta {
 	[key: string]: any;
 }
 
@@ -8,10 +9,10 @@ export type Level = 'debug' | 'info' | 'warn' | 'error' | 'critical' | 'verbose'
 
 export interface Message {
 	args: any[];
-	caller: Caller;
+	caller: Caller | null;
 	date: number;
 	level: Level;
-	metadata: Metadata;
+	meta: Meta;
 	name: string | undefined;
 }
 
@@ -19,42 +20,28 @@ export interface Pipes {
 	[key: string]: (...args: any[]) => string;
 }
 
+const FORMAT_REPLACE_MASK = /\{\{\s*([a-zA-Z_$][0-9a-zA-Z_$]+)(?:\s*\|\s*([a-zA-Z_$][0-9a-zA-Z_$]+))?\s*\}\}/g;
+
 export class Record {
-	static formatReplaceMask = /\{\{\s*([a-zA-Z_$][0-9a-zA-Z_$]+)(?:\s*\|\s*([a-zA-Z_$][0-9a-zA-Z_$]+))?\s*\}\}/g;
-	// eslint-disable-next-line no-control-regex
-	static ansiColorsReplaceMask = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
-	static fromFileName: string = __filename;
+	protected static lineLength: number = 0;
 	static separator: string = '<-|->';
-	static lineLength: number = 0;
+	static fromFileName: string = __filename;
 
-	static printWithN(parts: string[]): string {
-		for (let i = 0, iNext = 1, len = parts.length - 1, sln: number; i < len; i += 2, iNext += 2) {
-			sln = this.lineLength - parts[iNext].length;
-			parts[i] += sln > 0 ? `\n${' '.repeat(this.lineLength - parts[iNext].length)}` : '\n';
-		}
-
-		return parts.join('');
-	}
-
-	readonly caller: Caller;
+	readonly caller: Caller | null;
 
 	constructor(
-		public readonly name: string | undefined,
-		public readonly formats: string[],
-		public readonly pipes: Pipes,
-		public readonly metadata: Metadata,
-		public readonly level: Level,
-		public readonly args: any[],
-		public readonly date: number = Date.now(),
+		readonly name: string | undefined,
+		readonly formats: string[],
+		readonly pipes: Pipes,
+		readonly meta: Meta,
+		readonly level: Level,
+		readonly args: any[],
+		readonly date: number = Date.now(),
 	) {
-		this.caller = Caller.get(Record.fromFileName);
+		this.caller = Caller.create(Record.fromFileName);
 	}
 
 	messages(): string[] {
-		if (!Array.isArray(this.formats)) {
-			return [];
-		}
-
 		return this.formats.map((f) => {
 			if (f === 'json') {
 				const cache: any[] = [];
@@ -74,7 +61,9 @@ export class Record {
 				return out;
 			}
 
-			const stringMessage = f.replace(Record.formatReplaceMask, (_: string, propName: string, pipeName: string) => {
+			Record.lineLength = process.stdout.columns;
+
+			const stringMessage = f.replace(FORMAT_REPLACE_MASK, (_: string, propName: string, pipeName: string) => {
 				const prop = (this as {[ key: string]: any })[propName];
 
 				if (pipeName !== undefined) {
@@ -90,39 +79,25 @@ export class Record {
 				return prop;
 			});
 
-			if (Record.separator && stringMessage.includes(Record.separator)) {
-				if (Record.lineLength > 0) {
-					const parts = stringMessage.split(Record.separator);
+			if (!Record.separator || !stringMessage.includes(Record.separator)) {
+				return stringMessage;
+			}
 
-					if (stringMessage.includes('\n')) {
-						return Record.printWithN(parts);
-					}
-
-					const cleanMessage = stringMessage.replace(Record.ansiColorsReplaceMask, '');
-					const seps = parts.length - 1;
-					const sl = Record.lineLength - ((cleanMessage || '').length - (seps * Record.separator.length));
-
-					if (sl > 0 && sl % seps !== 0) {
-						for (let i = 0, len = parts.length; i < len; i += seps) parts[i] += ' ';
-					}
-
-					return sl > 0 ? parts.join(' '.repeat(Math.floor(sl / seps))) : Record.printWithN(parts);
-				}
-
+			if (Record.lineLength === 0) {
 				return stringMessage.split(Record.separator).join('\n');
 			}
 
-			return stringMessage;
+			return resolveSeparators(stringMessage, Record.separator, Record.lineLength);
 		});
 	}
 
 	toMessage(): Message {
 		return {
-			args: this.args || [],
+			args: this.args,
 			caller: this.caller,
 			date: this.date,
 			level: this.level,
-			metadata: this.metadata || {},
+			meta: this.meta,
 			name: this.name,
 		};
 	}

@@ -16,7 +16,7 @@ const errorLogFileStream = createWriteStream(errorLogFile, { flags: 'a' });
 
 Logger.configure({
 	name: 'app',
-	metadata: { appId: process.pid + '.app' },
+	meta: { appId: process.pid + '.app' },
 	formats: [`{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}`, 'json'],
 	pipes: {
 		uppercase(text: string): string {
