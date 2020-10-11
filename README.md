@@ -15,37 +15,37 @@ const accessLogFileStream = createWriteStream(accessLogFile, { flags: 'a' });
 const errorLogFileStream = createWriteStream(errorLogFile, { flags: 'a' });
 
 Logger.configure({
-	name: 'app',
-	meta: { appId: process.pid + '.app' },
-	formats: [`{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}`, 'json'],
-	pipes: {
-		uppercase(text: string): string {
-			return text.toUpperCase();
-		},
-		date(date: number): string {
-			return new Date(date).toISOString();
-		},
-		name(name: string | undefined): string {
-			return name ? ` <${name}>` : '';
-		},
-		message(args: any[]): string {
-			return args.map((x) => (typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false))).join('\n');
-		},
-		file({ fileName, line, column }: Caller): string {
-			return `${fileName}:${line}:${column}`;
-		},
-	},
-	handler(record: Record): void {
-		const [customOutput, jsonOutput] = record.messages();
-		// 2 formats => 2 outputs
-		if (!errorLevels.includes(record.level)) {
-			process.stdout.write(customOutput + '\n');
-			accessLogFileStream.write(jsonOutput + '\n');
-		} else {
-			process.stderr.write(customOutput + '\n');
-			errorLogFileStream.write(jsonOutput + '\n');
-		}
-	},
+  name: 'app',
+  meta: { appId: process.pid + '.app' },
+  formats: [`{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}`, 'json'],
+  pipes: {
+    uppercase(text: string): string {
+      return text.toUpperCase();
+    },
+    date(date: number): string {
+      return new Date(date).toISOString();
+    },
+    name(name: string | undefined): string {
+      return name ? ` <${name}>` : '';
+    },
+    message(args: any[]): string {
+      return args.map((x) => (typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false))).join('\n');
+    },
+    file({ fileName, line, column }: Caller): string {
+      return `${fileName}:${line}:${column}`;
+    },
+  },
+  handler(record: Record): void {
+    const [customOutput, jsonOutput] = record.messages();
+    // 2 formats => 2 outputs
+    if (!errorLevels.includes(record.level)) {
+      process.stdout.write(customOutput + '\n');
+      accessLogFileStream.write(jsonOutput + '\n');
+    } else {
+      process.stderr.write(customOutput + '\n');
+      errorLogFileStream.write(jsonOutput + '\n');
+    }
+  },
 });
 ```
 
@@ -68,12 +68,12 @@ console.warn('starting in production mode');
 ```typescript
 Record.separator = '<=!=>';
 Logger.configure({
-	formats: [`{{ date }}<=!=>{{ args | message }}`],
-	pipes: {
-		message(args: any[]): string {
-			return args.join(' ');
-		},
-	},
+  formats: [`{{ date }}<=!=>{{ args | message }}`],
+  pipes: {
+    message(args: any[]): string {
+      return args.join(' ');
+    },
+  },
 });
 ```
 
@@ -91,14 +91,14 @@ console.meta({ isMaster: cluster.isMaster }).warn('starting in production mode')
 ```typescript
 const logger = new Logger({ name: 'request', meta: { appId: process.pid + '.app' } });
 export const requestLogger = responseTime((req: any, res: any, time: number) => {
-	logger.info(
-		chalk.green(req.method),
-		chalk.yellow(res.statusCode),
-		req.url,
-		chalk.yellow(time.toFixed(0) + 'ms'),
-		chalk.green(`${req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress}`),
-		chalk.magenta(req.headers['user-agent']),
-	);
+  logger.info(
+    chalk.green(req.method),
+    chalk.yellow(res.statusCode),
+    req.url,
+    chalk.yellow(time.toFixed(0) + 'ms'),
+    chalk.green(`${req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress}`),
+    chalk.magenta(req.headers['user-agent']),
+  );
 });
 ```
 
