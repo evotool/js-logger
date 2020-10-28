@@ -48,17 +48,13 @@
 	},
 	"nodemonConfig": {
 		"ignore": [
-			".git",
-			".vscode",
-			"node_modules",
-			"dist",
-			"src",
-			"coverage"
+			".git/",
+			".vscode/",
+			"node_modules/",
+			"dist/",
+			"coverage/"
 		],
-		"watch": [
-			"test/**/*.spec.ts"
-		],
-		"exec": "jest --coverage --detectOpenHandles",
+		"exec": "npm run test",
 		"ext": "ts"
 	},
 	"license": "MIT",
