@@ -119,7 +119,8 @@
 				"no-return-await": "off",
 				"require-await": "off",
 				"require-jsdoc": "off",
-				"space-before-function-paren": "off"
+				"space-before-function-paren": "off",
+				"valid-jsdoc": "off"
 			}
 		}
 	],

@@ -14,6 +14,9 @@ export class Caller {
 		return callSites;
 	}
 
+	/**
+	 * @description Create caller.
+	 */
 	static create(fromFilename: string, subCallersMaxLength: number = MAX_LENGTH): Caller | null {
 		let callerFilename: string | null;
 

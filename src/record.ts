@@ -41,6 +41,9 @@ export class Record {
 		this.caller = Caller.create(Record.fromFileName);
 	}
 
+	/**
+	 * @description Get formatted messages.
+	 */
 	messages(): string[] {
 		return this.formats.map((f) => {
 			if (f === 'json') {
@@ -91,6 +94,9 @@ export class Record {
 		});
 	}
 
+	/**
+	 * @description Get Message object.
+	 */
 	toMessage(): Message {
 		return {
 			args: this.args,
