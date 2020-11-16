@@ -4,6 +4,7 @@ const packageJson = JSON.parse(readFileSync('package.json').toString());
 
 delete packageJson.scripts;
 delete packageJson.jest;
+delete packageJson.devDependencies;
 delete packageJson.nodemonConfig;
 
 writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
