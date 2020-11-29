@@ -42,17 +42,17 @@ export class Record {
 	}
 
 	/**
-	 * @description Get formatted messages.
+	 * Get formatted messages.
 	 */
 	messages(): string[] {
 		return this.formats.map((f) => {
 			if (f === 'json') {
 				const cache: any[] = [];
 				const jsonMessage = this.toMessage();
-				const out = JSON.stringify(jsonMessage, (key, value) => {
+				const out = JSON.stringify(jsonMessage, (key: string, value: unknown) => {
 					if (typeof value === 'object' && value) {
 						if (cache.includes(value)) {
-							return `[circular ${key}]`;
+							return `[circular]`; // TODO: key from cache
 						}
 
 						cache.push(value);
@@ -67,7 +67,7 @@ export class Record {
 			Record.lineLength = process.stdout.columns;
 
 			const stringMessage = f.replace(FORMAT_REPLACE_MASK, (_: string, propName: string, pipeName: string) => {
-				const prop = (this as {[ key: string]: any })[propName];
+				const prop = this[propName as keyof Message] as string;
 
 				if (pipeName !== undefined) {
 					const pipe = this.pipes[pipeName];
@@ -95,7 +95,7 @@ export class Record {
 	}
 
 	/**
-	 * @description Get Message object.
+	 * Get Message object.
 	 */
 	toMessage(): Message {
 		return {

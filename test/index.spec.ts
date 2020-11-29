@@ -65,7 +65,7 @@ describe('index', () => {
 					return name ? ` <${name}>` : '';
 				},
 				message(args: any[]): string {
-					return args.map((x) => (typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false))).join('\n');
+					return args.map((x) => typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false)).join('\n');
 				},
 				file({ fileName, line, column }: Caller): string {
 					return `${fileName}:${line}:${column}`;

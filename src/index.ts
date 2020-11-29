@@ -34,7 +34,7 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Set global options.
+	 * Set global options.
 	 */
 	static configure(options: LoggerOptions): void {
 		if (options.name) {
@@ -63,7 +63,7 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Override console methods.
+	 * Override console methods.
 	 */
 	static overrideConsole(): void {
 		Object.defineProperty(console, 'logger', { value: Logger, writable: false });
@@ -82,14 +82,14 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Create a new logger with the name.
+	 * Create a new logger with the name.
 	 */
 	static useName(name: string): Logger {
 		return new Logger({ name });
 	}
 
 	/**
-	 * @description Create a new logger with metadata.
+	 * Create a new logger with metadata.
 	 */
 	static meta(meta: Meta): Logger {
 		const logger = new Logger();
@@ -99,14 +99,14 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Create a record with 'debug' log type.
+	 * Create a record with 'debug' log type.
 	 */
 	static log(...args: any[]): void {
 		this._handle(this, 'debug', args);
 	}
 
 	/**
-	 * @description Create a record with 'debug' log type. Enable debug for working.
+	 * Create a record with 'debug' log type. Enable debug for working.
 	 */
 	static debug(...args: any[]): void {
 		if (this._debugMode) {
@@ -115,42 +115,42 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Create a record with 'info' log type.
+	 * Create a record with 'info' log type.
 	 */
 	static info(...args: any[]): void {
 		this._handle(this, 'info', args);
 	}
 
 	/**
-	 * @description Create a record with 'warn' log type.
+	 * Create a record with 'warn' log type.
 	 */
 	static warn(...args: any[]): void {
 		this._handle(this, 'warn', args);
 	}
 
 	/**
-	 * @description Create a record with 'trace' log type.
+	 * Create a record with 'trace' log type.
 	 */
 	static trace(...args: any[]): void {
 		this._handle(this, 'trace', args);
 	}
 
 	/**
-	 * @description Create a record with 'error' log type.
+	 * Create a record with 'error' log type.
 	 */
 	static error(...args: any[]): void {
 		this._handle(this, 'error', args);
 	}
 
 	/**
-	 * @description Create a record with 'critical' log type.
+	 * Create a record with 'critical' log type.
 	 */
 	static critical(...args: any[]): void {
 		this._handle(this, 'critical', args);
 	}
 
 	/**
-	 * @description Create a record with 'verbose' log type.
+	 * Create a record with 'verbose' log type.
 	 */
 	static dir(...args: any[]): void {
 		this._handle(this, 'verbose', args);
@@ -163,7 +163,7 @@ export default class Logger {
 	protected readonly _debugMode: boolean;
 
 	/**
-	 * @description Create new Logger with custom options
+	 * Create new Logger with custom options
 	 */
 	constructor(options?: LoggerOptions) {
 		Object.assign(this._meta, Logger._meta);
@@ -205,13 +205,13 @@ export default class Logger {
 	private readonly _handler = (record: Record): void => {};
 
 	/**
-	 * @description Create a new logger with name and options of current logger.
+	 * Create a new logger with name and options of current logger.
 	 */
 	name(name: string): Logger {
 		const logger = this.clone();
 
 		Object.defineProperty(logger, '_logname', {
-			value: logger._logname && name ? `${logger._logname}.${name}` : (name || logger._logname),
+			value: logger._logname && name ? `${logger._logname}.${name}` : name || logger._logname,
 			writable: false,
 		});
 
@@ -219,14 +219,14 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Add metadata to current logger.
+	 * Add metadata to current logger.
 	 */
 	meta(meta: Meta): void {
 		Object.assign(this._meta, meta);
 	}
 
 	/**
-	 * @description Create a new logger with options of current logger.
+	 * Create a new logger with options of current logger.
 	 */
 	clone(): Logger {
 		return new Logger({
@@ -239,14 +239,14 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Create a record with 'debug' log type.
+	 * Create a record with 'debug' log type.
 	 */
 	log(...args: any[]): void {
 		Logger._handle(this, 'debug', args);
 	}
 
 	/**
-	 * @description Create a record with 'debug' log type. Enable debug for working.
+	 * Create a record with 'debug' log type. Enable debug for working.
 	 */
 	debug(...args: any[]): void {
 		if (Logger._debugMode) {
@@ -255,42 +255,42 @@ export default class Logger {
 	}
 
 	/**
-	 * @description Create a record with 'info' log type.
+	 * Create a record with 'info' log type.
 	 */
 	info(...args: any[]): void {
 		Logger._handle(this, 'info', args);
 	}
 
 	/**
-	 * @description Create a record with 'warn' log type.
+	 * Create a record with 'warn' log type.
 	 */
 	warn(...args: any[]): void {
 		Logger._handle(this, 'warn', args);
 	}
 
 	/**
-	 * @description Create a record with 'trace' log type.
+	 * Create a record with 'trace' log type.
 	 */
 	trace(...args: any[]): void {
 		Logger._handle(this, 'trace', args);
 	}
 
 	/**
-	 * @description Create a record with 'error' log type.
+	 * Create a record with 'error' log type.
 	 */
 	error(...args: any[]): void {
 		Logger._handle(this, 'error', args);
 	}
 
 	/**
-	 * @description Create a record with 'critical' log type.
+	 * Create a record with 'critical' log type.
 	 */
 	critical(...args: any[]): void {
 		Logger._handle(this, 'critical', args);
 	}
 
 	/**
-	 * @description Create a record with 'verbose' log type.
+	 * Create a record with 'verbose' log type.
 	 */
 	dir(...args: any[]): void {
 		Logger._handle(this, 'verbose', args);
@@ -301,17 +301,17 @@ declare global {
 	interface Console {
 
 		/**
-		 * @description Logger type.
+		 * Logger type.
 		 */
 		logger: typeof Logger;
 
 		/**
-		 * @description Create a new logger with metadata.
+		 * Create a new logger with metadata.
 		 */
 		meta(meta: Meta): Logger;
 
 		/**
-		 * @description Create a new logger with name.
+		 * Create a new logger with name.
 		 */
 		name(name: string): Logger;
 	}
@@ -329,32 +329,32 @@ interface LoggerInstance {
 export interface LoggerOptions {
 
 	/**
-	 * @description Name of the logger.
+	 * Name of the logger.
 	 */
 	name?: string;
 
 	/**
-	 * @description Object with logger metadata.
+	 * Object with logger metadata.
 	 */
 	meta?: Meta;
 
 	/**
-	 * @description Output message formats.
+	 * Output message formats.
 	 */
 	formats?: string[];
 
 	/**
-	 * @description Functions for message formatting.
+	 * Functions for message formatting.
 	 */
 	pipes?: Pipes;
 
 	/**
-	 * @description Output record handler. Set the handler for handle output messages.
+	 * Output record handler. Set the handler for handle output messages.
 	 */
 	handler?(record: Record): void;
 
 	/**
-	 * @description Enable debug method. When is true: logger.debug() will works.
+	 * Enable debug method. When is true: logger.debug() will works.
 	 */
 	debug?: boolean;
 }

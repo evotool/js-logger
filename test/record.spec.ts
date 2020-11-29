@@ -84,6 +84,6 @@ describe('record', () => {
 		const [jsonMessage] = record.messages();
 		const json = JSON.parse(jsonMessage);
 		expect(json.date).toBe(ts);
-		expect(json.args[0].circular).toBe('[circular circular]');
+		expect(json.args[0].circular).toBe('[circular]');
 	});
 });

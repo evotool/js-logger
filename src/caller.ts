@@ -15,7 +15,7 @@ export class Caller {
 	}
 
 	/**
-	 * @description Create caller.
+	 * Create caller.
 	 */
 	static create(fromFilename: string, subCallersMaxLength: number = MAX_LENGTH): Caller | null {
 		let callerFilename: string | null;
