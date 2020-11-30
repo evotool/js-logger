@@ -49,7 +49,7 @@ export class Record {
 			if (f === 'json') {
 				const cache: any[] = [];
 				const jsonMessage = this.toMessage();
-				const out = JSON.stringify(jsonMessage, (key: string, value: unknown) => {
+				const out = JSON.stringify(jsonMessage, (key: string, value: any) => {
 					if (typeof value === 'object' && value) {
 						if (cache.includes(value)) {
 							return `[circular]`; // TODO: key from cache
