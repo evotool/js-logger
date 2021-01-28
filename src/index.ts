@@ -16,13 +16,24 @@ export default class Logger {
 	protected static readonly _pipes: Pipes = {};
 	protected static readonly _formats: string[] = [];
 	protected static _debugMode: boolean = false;
+	protected static _writing: boolean = false;
 	protected static _handler = (record: Record): void => {};
 
 	protected static _handle(instance: typeof Logger | Logger, level: Level, args: any[]): void {
+		if (this._writing) {
+			process.nextTick(this._handle, instance, level, args);
+
+			return;
+		}
+
+		this._writing = true;
+
 		const { _logname: logname, _formats: formats, _pipes: pipes, _handler: handler } = instance as unknown as LoggerInstance;
 		const meta = this._getMeta(instance);
 		const record = new Record(logname, formats, pipes, meta, level, args);
 		handler.call({}, record);
+
+		this._writing = false;
 	}
 
 	protected static _getMeta(instance?: typeof Logger | Logger): Meta {
