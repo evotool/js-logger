@@ -2,9 +2,9 @@ const NATIVE_PREPARE_STACK_TRACE = Error.prepareStackTrace;
 
 const OVERRIDED_PREPARE_STACK_TRACE = (e: Error, s: NodeJS.CallSite[]): NodeJS.CallSite[] => s;
 
-const MAX_LENGTH = 1;
-
 export class Caller {
+	static MAX_CALLERS_COUNT = 1;
+
 	protected static _getCallSites(): NodeJS.CallSite[] {
 		Error.prepareStackTrace = OVERRIDED_PREPARE_STACK_TRACE;
 
@@ -17,7 +17,7 @@ export class Caller {
 	/**
 	 * Create caller.
 	 */
-	static create(fromFilename: string, subCallersMaxLength: number = MAX_LENGTH): Caller | null {
+	static create(fromFilename: string, maxCallersCount: number = Caller.MAX_CALLERS_COUNT): Caller | null {
 		let callerFilename: string | null;
 
 		const callSites = this._getCallSites();
@@ -34,41 +34,42 @@ export class Caller {
 			if (found && fromFilename !== callerFilename) {
 				const callSite = callSites[i];
 				const startIndex = i + 1;
-				const endIndex = startIndex + subCallersMaxLength;
-				const subCallSites = callSites.slice(startIndex, endIndex);
+				const endIndex = startIndex + maxCallersCount;
+				const parentCallSites = callSites.slice(startIndex, endIndex);
 
-				return new Caller(callSite, subCallSites);
+				return new Caller(callSite, parentCallSites);
 			}
 		}
 
 		return null;
 	}
 
-	readonly fileName: string;
-	readonly methodName: string;
-	readonly functionName: string;
-	readonly typeName: string;
-	readonly line: number;
-	readonly column: number;
-	readonly evalOrigin: string;
+	readonly fileName?: string;
+	readonly methodName?: string;
+	readonly functionName?: string;
+	readonly typeName?: string;
+	readonly line?: number;
+	readonly column?: number;
+	readonly evalOrigin?: string;
 	readonly isToplevel: boolean;
 	readonly isEval: boolean;
 	readonly isNative: boolean;
 	readonly isConstructor: boolean;
-	readonly subCallers: Caller[];
+	readonly parent: Caller | null;
 
-	protected constructor(cs: NodeJS.CallSite, subCallSites: NodeJS.CallSite[]) {
-		this.fileName = cs.getFileName() || '';
-		this.methodName = cs.getMethodName() || '';
-		this.functionName = cs.getFunctionName() || '';
-		this.typeName = cs.getTypeName() || '';
-		this.line = cs.getLineNumber() || 0;
-		this.column = cs.getColumnNumber() || 0;
-		this.evalOrigin = cs.getEvalOrigin() || '';
+	protected constructor(cs: NodeJS.CallSite, parentCallSites: NodeJS.CallSite[]) {
+		this.fileName = cs.getFileName() || undefined;
+		this.methodName = cs.getMethodName() || undefined;
+		this.functionName = cs.getFunctionName() || undefined;
+		this.typeName = cs.getTypeName() || undefined;
+		this.line = cs.getLineNumber() || undefined;
+		this.column = cs.getColumnNumber() || undefined;
+		this.evalOrigin = cs.getEvalOrigin();
 		this.isToplevel = cs.isToplevel();
 		this.isEval = cs.isEval();
 		this.isNative = cs.isNative();
 		this.isConstructor = cs.isConstructor();
-		this.subCallers = subCallSites.map((cs, i, a) => new Caller(cs, a.slice(i + 1)));
+		[cs, ...parentCallSites] = parentCallSites;
+		this.parent = cs ? new Caller(cs, parentCallSites) : null;
 	}
 }

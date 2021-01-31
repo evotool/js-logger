@@ -2,7 +2,7 @@ import { Caller } from '../src';
 
 describe('caller', () => {
 	it('should create caller', (done) => {
-		const caller = Caller.create(__filename, 10);
+		const caller = Caller.create(__filename, 1);
 		expect(caller).toBeTruthy();
 		done();
 	});

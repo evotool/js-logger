@@ -8,16 +8,16 @@ export interface Meta {
 export type Level = 'debug' | 'info' | 'warn' | 'error' | 'critical' | 'verbose' | 'trace';
 
 export interface Message {
-	args: any[];
-	caller: Caller | null;
-	date: number;
-	level: Level;
-	meta: Meta;
-	name: string | undefined;
+	args: any;
+	caller: any;
+	date: any;
+	level: any;
+	meta: any;
+	name: any;
 }
 
 export interface Pipes {
-	[key: string]: (...args: any[]) => string;
+	[key: string]: (...args: any[]) => any;
 }
 
 const FORMAT_REPLACE_MASK = /\{\{\s*([a-zA-Z_$][0-9a-zA-Z_$]+)(?:\s*\|\s*([a-zA-Z_$][0-9a-zA-Z_$]+))?\s*\}\}/g;
@@ -48,7 +48,7 @@ export class Record {
 		return this.formats.map((f) => {
 			if (f === 'json') {
 				const cache: any[] = [];
-				const jsonMessage = this.toMessage();
+				const jsonMessage = this.toMessage(this.pipes);
 				const out = JSON.stringify(jsonMessage, (key: string, value: any) => {
 					if (typeof value === 'object' && value) {
 						if (cache.includes(value)) {
@@ -97,14 +97,14 @@ export class Record {
 	/**
 	 * Get Message object.
 	 */
-	toMessage(): Message {
+	toMessage(pipes: Pipes): Message {
 		return {
-			args: this.args,
-			caller: this.caller,
-			date: this.date,
-			level: this.level,
-			meta: this.meta,
-			name: this.name,
+			args: pipes.message_args ? pipes.message_args(this.args) : this.args,
+			caller: pipes.message_caller ? pipes.message_caller(this.caller) : this.caller,
+			date: pipes.message_date ? pipes.message_date(this.date) : this.date,
+			level: pipes.message_level ? pipes.message_level(this.level) : this.level,
+			meta: pipes.message_meta ? pipes.message_meta(this.meta) : this.meta,
+			name: pipes.message_name ? pipes.message_name(this.name) : this.name,
 		};
 	}
 }
