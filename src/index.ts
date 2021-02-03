@@ -172,53 +172,24 @@ export default class Logger {
 	protected readonly _pipes: Pipes = {};
 	protected readonly _formats: string[];
 	protected readonly _debugMode: boolean;
+	protected readonly _handler: (record: Record) => void;
 
 	/**
 	 * Create new Logger with custom options
 	 */
-	constructor(options?: LoggerOptions) {
-		Object.assign(this._meta, Logger._meta);
-		Object.assign(this._pipes, Logger._pipes);
-		this._handler = Logger._handler;
-		this._logname = Logger._logname;
-		this._formats = Array.from(Logger._formats);
-		this._debugMode = Logger._debugMode;
-
-		if (!options) {
-			return;
-		}
-
-		if (options.name) {
-			this._logname = options.name;
-		}
-
-		if (typeof options.debug === 'boolean') {
-			this._debugMode = options.debug;
-		}
-
-		if (Array.isArray(options.formats)) {
-			this._formats = Array.from(options.formats);
-		}
-
-		if (options.pipes) {
-			Object.assign(this._pipes, options.pipes);
-		}
-
-		if (options.meta) {
-			Object.assign(this._meta, options.meta);
-		}
-
-		if (typeof options.handler === 'function') {
-			this._handler = options.handler;
-		}
+	constructor(options: LoggerOptions = {}) {
+		this._logname = options.name ? options.name : Logger._logname;
+		this._debugMode = typeof options.debug === 'boolean' ? options.debug : Logger._debugMode;
+		this._formats = Array.from(Array.isArray(options.formats) ? options.formats : Logger._formats);
+		this._handler = typeof options.handler === 'function' ? options.handler : Logger._handler;
+		Object.assign(this._pipes, Logger._pipes, options.pipes || {});
+		Object.assign(this._meta, Logger._meta, options.meta || {});
 	}
-
-	private readonly _handler = (record: Record): void => {};
 
 	/**
 	 * Create a new logger with name and options of current logger.
 	 */
-	name(name: string): Logger {
+	name = (name: string): Logger => {
 		const logger = this.clone();
 
 		Object.defineProperty(logger, '_logname', {
@@ -232,14 +203,14 @@ export default class Logger {
 	/**
 	 * Add metadata to current logger.
 	 */
-	meta(meta: Meta): void {
+	meta = (meta: Meta): void => {
 		Object.assign(this._meta, meta);
 	}
 
 	/**
 	 * Create a new logger with options of current logger.
 	 */
-	clone(): Logger {
+	clone = (): Logger => {
 		return new Logger({
 			name: this._logname,
 			meta: this._meta,
@@ -252,14 +223,14 @@ export default class Logger {
 	/**
 	 * Create a record with 'debug' log type.
 	 */
-	log(...args: any[]): void {
+	log = (...args: any[]): void => {
 		Logger._handle(this, 'debug', args);
 	}
 
 	/**
 	 * Create a record with 'debug' log type. Enable debug for working.
 	 */
-	debug(...args: any[]): void {
+	debug = (...args: any[]): void => {
 		if (Logger._debugMode) {
 			Logger._handle(this, 'debug', args);
 		}
@@ -268,42 +239,42 @@ export default class Logger {
 	/**
 	 * Create a record with 'info' log type.
 	 */
-	info(...args: any[]): void {
+	info = (...args: any[]): void => {
 		Logger._handle(this, 'info', args);
 	}
 
 	/**
 	 * Create a record with 'warn' log type.
 	 */
-	warn(...args: any[]): void {
+	warn = (...args: any[]): void => {
 		Logger._handle(this, 'warn', args);
 	}
 
 	/**
 	 * Create a record with 'trace' log type.
 	 */
-	trace(...args: any[]): void {
+	trace = (...args: any[]): void => {
 		Logger._handle(this, 'trace', args);
 	}
 
 	/**
 	 * Create a record with 'error' log type.
 	 */
-	error(...args: any[]): void {
+	error = (...args: any[]): void => {
 		Logger._handle(this, 'error', args);
 	}
 
 	/**
 	 * Create a record with 'critical' log type.
 	 */
-	critical(...args: any[]): void {
+	critical = (...args: any[]): void => {
 		Logger._handle(this, 'critical', args);
 	}
 
 	/**
 	 * Create a record with 'verbose' log type.
 	 */
-	dir(...args: any[]): void {
+	dir = (...args: any[]): void => {
 		Logger._handle(this, 'verbose', args);
 	}
 }
@@ -371,8 +342,5 @@ export interface LoggerOptions {
 }
 
 for (const m of Logger.CONSOLE_METHODS_KEYS) {
-	Object.defineProperty(Logger.CONSOLE_METHODS, m, {
-		value: console[m],
-		writable: false,
-	});
+	Object.defineProperty(Logger.CONSOLE_METHODS, m, { value: console[m], writable: false });
 }
