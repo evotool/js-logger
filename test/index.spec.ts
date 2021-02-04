@@ -39,14 +39,14 @@ describe('index', () => {
 		logger.debug();
 
 		logger = Logger.useName('test');
-		expect(logger['_logname']).toBe('test');
+		expect(logger.logname).toBe('test');
 		logger = logger.name('');
-		expect(logger['_logname']).toBe('test');
+		expect(logger.logname).toBe('test');
 		done();
 	});
 
 	it('should configure default Logger options', (done) => {
-		expect(Logger['_logname']).toBeUndefined();
+		expect(Logger.logname).toBeUndefined();
 		Logger.configure({
 			name: 'app',
 			meta: { appId: 'test' },
@@ -75,7 +75,7 @@ describe('index', () => {
 				record = r;
 			},
 		});
-		expect(Logger['_logname']).toBe('app');
+		expect(Logger.logname).toBe('app');
 
 		done();
 	});
@@ -90,11 +90,12 @@ describe('index', () => {
 			.meta({ test: 1 })
 			.name('test')
 			.log('test message');
+		expect(Logger.logname).toBe('app');
 		expect(record.name).toBe('app.test');
 		expect(record.meta.test).toBe(1);
 
 		const logger = console.name('test');
-		expect(logger['_logname']).toBe('test');
+		expect(logger.logname).toBe('test');
 
 		const [consoleMessage, json] = record.messages();
 		expect((/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z DEBUG <app\.test> test message\s+.+:\d+:\d+$/).test(consoleMessage)).toBe(true);

@@ -11,7 +11,8 @@ export default class Logger {
 	static readonly CONSOLE_METHODS_KEYS: ConsoleMethods[] = ['log', 'info', 'error', 'dir', 'warn', 'debug', 'trace'];
 	static readonly CONSOLE_METHODS: { [methodName: string]: (...args: any[]) => void } = {};
 
-	protected static _logname?: string | undefined;
+	static logname?: string | undefined;
+
 	protected static readonly _meta: Meta = {};
 	protected static readonly _pipes: Pipes = {};
 	protected static readonly _formats: string[] = [];
@@ -28,7 +29,7 @@ export default class Logger {
 
 		Logger._writing = true;
 
-		const { _logname: logname, _formats: formats, _pipes: pipes, _handler: handler } = instance as unknown as LoggerInstance;
+		const { logname, _formats: formats, _pipes: pipes, _handler: handler } = instance as unknown as LoggerInstance;
 		const meta = Logger._getMeta(instance);
 		const record = new Record(logname, formats, pipes, meta, level, args);
 		handler.call({}, record);
@@ -48,9 +49,7 @@ export default class Logger {
 	 * Set global options.
 	 */
 	static configure(options: LoggerOptions): void {
-		if (options.name) {
-			Logger._logname = options.name;
-		}
+		Logger.logname = options.name;
 
 		if (options.debug) {
 			Logger._debugMode = true;
@@ -167,7 +166,7 @@ export default class Logger {
 		Logger._handle(Logger, 'verbose', args);
 	}
 
-	protected readonly _logname: string | undefined;
+	readonly logname: string | undefined;
 	protected readonly _meta: Meta = {};
 	protected readonly _pipes: Pipes = {};
 	protected readonly _formats: string[];
@@ -178,22 +177,33 @@ export default class Logger {
 	 * Create new Logger with custom options
 	 */
 	constructor(options: LoggerOptions = {}) {
-		this._logname = options.name ? options.name : Logger._logname;
+		this.logname = options.name || Logger.logname;
 		this._debugMode = typeof options.debug === 'boolean' ? options.debug : Logger._debugMode;
 		this._formats = Array.from(Array.isArray(options.formats) ? options.formats : Logger._formats);
 		this._handler = typeof options.handler === 'function' ? options.handler : Logger._handler;
 		Object.assign(this._pipes, Logger._pipes, options.pipes || {});
 		Object.assign(this._meta, Logger._meta, options.meta || {});
+		this.name = this.name.bind(this);
+		this.meta = this.meta.bind(this);
+		this.clone = this.clone.bind(this);
+		this.log = this.log.bind(this);
+		this.debug = this.debug.bind(this);
+		this.info = this.info.bind(this);
+		this.warn = this.warn.bind(this);
+		this.trace = this.trace.bind(this);
+		this.error = this.error.bind(this);
+		this.critical = this.critical.bind(this);
+		this.dir = this.dir.bind(this);
 	}
 
 	/**
 	 * Create a new logger with name and options of current logger.
 	 */
-	name = (name: string): Logger => {
+	name(name: string): Logger {
 		const logger = this.clone();
 
-		Object.defineProperty(logger, '_logname', {
-			value: logger._logname && name ? `${logger._logname}.${name}` : name || logger._logname,
+		Object.defineProperty(logger, 'logname', {
+			value: logger.logname && name ? `${logger.logname}.${name}` : name || logger.logname,
 			writable: false,
 		});
 
@@ -203,16 +213,16 @@ export default class Logger {
 	/**
 	 * Add metadata to current logger.
 	 */
-	meta = (meta: Meta): void => {
+	meta(meta: Meta): void {
 		Object.assign(this._meta, meta);
 	}
 
 	/**
 	 * Create a new logger with options of current logger.
 	 */
-	clone = (): Logger => {
+	clone(): Logger {
 		return new Logger({
-			name: this._logname,
+			name: this.logname,
 			meta: this._meta,
 			formats: this._formats,
 			pipes: this._pipes,
@@ -223,14 +233,14 @@ export default class Logger {
 	/**
 	 * Create a record with 'debug' log type.
 	 */
-	log = (...args: any[]): void => {
+	log(...args: any[]): void {
 		Logger._handle(this, 'debug', args);
 	}
 
 	/**
 	 * Create a record with 'debug' log type. Enable debug for working.
 	 */
-	debug = (...args: any[]): void => {
+	debug(...args: any[]): void {
 		if (Logger._debugMode) {
 			Logger._handle(this, 'debug', args);
 		}
@@ -239,42 +249,42 @@ export default class Logger {
 	/**
 	 * Create a record with 'info' log type.
 	 */
-	info = (...args: any[]): void => {
+	info(...args: any[]): void {
 		Logger._handle(this, 'info', args);
 	}
 
 	/**
 	 * Create a record with 'warn' log type.
 	 */
-	warn = (...args: any[]): void => {
+	warn(...args: any[]): void {
 		Logger._handle(this, 'warn', args);
 	}
 
 	/**
 	 * Create a record with 'trace' log type.
 	 */
-	trace = (...args: any[]): void => {
+	trace(...args: any[]): void {
 		Logger._handle(this, 'trace', args);
 	}
 
 	/**
 	 * Create a record with 'error' log type.
 	 */
-	error = (...args: any[]): void => {
+	error(...args: any[]): void {
 		Logger._handle(this, 'error', args);
 	}
 
 	/**
 	 * Create a record with 'critical' log type.
 	 */
-	critical = (...args: any[]): void => {
+	critical(...args: any[]): void {
 		Logger._handle(this, 'critical', args);
 	}
 
 	/**
 	 * Create a record with 'verbose' log type.
 	 */
-	dir = (...args: any[]): void => {
+	dir(...args: any[]): void {
 		Logger._handle(this, 'verbose', args);
 	}
 }
@@ -300,7 +310,7 @@ declare global {
 }
 
 interface LoggerInstance {
-	_logname: string | undefined;
+	logname: string | undefined;
 	_meta: Meta;
 	_pipes: Pipes;
 	_formats: string[];
