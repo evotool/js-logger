@@ -2,7 +2,7 @@ import { Caller } from '../src';
 
 describe('caller', () => {
 	it('should create caller', (done) => {
-		const caller = Caller.create(__filename, 1);
+		const caller = Caller.create(1);
 		expect(caller).toBeTruthy();
 		done();
 	});
@@ -12,7 +12,7 @@ describe('caller', () => {
 
 		for (let i = 0; i < 10000; i++) {
 			process.nextTick(() => {
-				callers.push(Caller.create(__filename, 0));
+				callers.push(Caller.create(0));
 			});
 		}
 

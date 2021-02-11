@@ -25,7 +25,6 @@ const FORMAT_REPLACE_MASK = /\{\{\s*([a-zA-Z_$][0-9a-zA-Z_$]+)(?:\s*\|\s*([a-zA-
 export class Record {
 	protected static lineLength: number = 0;
 	static separator: string = '<-|->';
-	static fromFileName: string = __filename;
 
 	readonly caller: Caller | null;
 
@@ -38,7 +37,7 @@ export class Record {
 		readonly args: any[],
 		readonly date: number = Date.now(),
 	) {
-		this.caller = Caller.create(Record.fromFileName);
+		this.caller = Caller.create();
 	}
 
 	/**

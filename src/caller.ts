@@ -1,3 +1,5 @@
+import { CONSOLE_METHOD_NAMES, ConsoleMethodName } from './constants';
+
 const NATIVE_PREPARE_STACK_TRACE = Error.prepareStackTrace;
 
 const OVERRIDED_PREPARE_STACK_TRACE = (e: Error, s: NodeJS.CallSite[]): NodeJS.CallSite[] => s;
@@ -17,23 +19,27 @@ export class Caller {
 	/**
 	 * Create caller.
 	 */
-	static create(fromFilename: string, maxCallersCount: number = Caller.MAX_CALLERS_COUNT): Caller | null {
-		let callerFilename: string | null;
+	static create(maxCallersCount: number = Caller.MAX_CALLERS_COUNT): Caller | null {
+		let methodName: string | null;
 
 		const callSites = this._getCallSites();
 
-		for (let i = 1, found = false, len = callSites.length; i < len; i++) {
-			callerFilename = callSites[i].getFileName();
+		let callSite: NodeJS.CallSite = callSites[0];
 
-			if (!found && callerFilename === fromFilename) {
-				found = true;
+		for (let i = 1, foundHandle = false, len = callSites.length; i < len; i++) {
+			callSite = callSites[i];
+			methodName = callSite.getMethodName();
+
+			if (!foundHandle && methodName === '_handle') {
+				foundHandle = true;
 
 				continue;
 			}
 
-			if (found && fromFilename !== callerFilename) {
-				const callSite = callSites[i];
-				const startIndex = i + 1;
+			if (foundHandle && CONSOLE_METHOD_NAMES.includes(methodName as ConsoleMethodName)) {
+				callSite = callSites[i + 1];
+
+				const startIndex = i + 2;
 				const endIndex = startIndex + maxCallersCount;
 				const parentCallSites = callSites.slice(startIndex, endIndex);
 
@@ -41,7 +47,7 @@ export class Caller {
 			}
 		}
 
-		return null;
+		return new Caller(callSite);
 	}
 
 	readonly fileName?: string;
@@ -50,26 +56,15 @@ export class Caller {
 	readonly typeName?: string;
 	readonly line?: number;
 	readonly column?: number;
-	readonly evalOrigin?: string;
-	readonly isToplevel: boolean;
-	readonly isEval: boolean;
-	readonly isNative: boolean;
-	readonly isConstructor: boolean;
-	readonly parent: Caller | null;
+	readonly trace?: Caller[];
 
-	protected constructor(cs: NodeJS.CallSite, parentCallSites: NodeJS.CallSite[]) {
-		this.fileName = cs.getFileName() || undefined;
-		this.methodName = cs.getMethodName() || undefined;
-		this.functionName = cs.getFunctionName() || undefined;
-		this.typeName = cs.getTypeName() || undefined;
-		this.line = cs.getLineNumber() || undefined;
-		this.column = cs.getColumnNumber() || undefined;
-		this.evalOrigin = cs.getEvalOrigin();
-		this.isToplevel = cs.isToplevel();
-		this.isEval = cs.isEval();
-		this.isNative = cs.isNative();
-		this.isConstructor = cs.isConstructor();
-		[cs, ...parentCallSites] = parentCallSites;
-		this.parent = cs ? new Caller(cs, parentCallSites) : null;
+	protected constructor(callSite: NodeJS.CallSite, parentCallSites?: NodeJS.CallSite[]) {
+		this.fileName = callSite.getFileName() || undefined;
+		this.methodName = callSite.getMethodName() || undefined;
+		this.functionName = callSite.getFunctionName() || undefined;
+		this.typeName = callSite.getTypeName() || undefined;
+		this.line = callSite.getLineNumber() || undefined;
+		this.column = callSite.getColumnNumber() || undefined;
+		this.trace = parentCallSites?.map((cs) => new Caller(cs));
 	}
 }

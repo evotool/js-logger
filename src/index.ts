@@ -1,16 +1,10 @@
+import { CONSOLE_METHOD_NAMES } from './constants';
 import { Level, Meta, Pipes, Record } from './record';
 
 export * from './record';
 export * from './caller';
 
-Record.fromFileName = __filename;
-
-export type ConsoleMethods = 'log' | 'info' | 'error' | 'dir' | 'warn' | 'debug' | 'trace';
-
 export default class Logger {
-	static readonly CONSOLE_METHODS_KEYS: ConsoleMethods[] = ['log', 'info', 'error', 'dir', 'warn', 'debug', 'trace'];
-	static readonly CONSOLE_METHODS: { [methodName: string]: (...args: any[]) => void } = {};
-
 	static logname?: string | undefined;
 
 	protected static readonly _meta: Meta = {};
@@ -76,9 +70,11 @@ export default class Logger {
 	 * Override console methods.
 	 */
 	static overrideConsole(): void {
+		global.__console = { ...console };
+
 		Object.defineProperty(console, 'logger', { value: Logger, writable: false });
 
-		for (const m of Logger.CONSOLE_METHODS_KEYS) {
+		for (const m of CONSOLE_METHOD_NAMES) {
 			console[m] = Logger[m].bind(Logger);
 		}
 
@@ -307,6 +303,14 @@ declare global {
 		 */
 		name(name: string): Logger;
 	}
+
+	namespace NodeJS {
+		interface Global {
+			__console: Console;
+		}
+	}
+
+	let __console: Console;
 }
 
 interface LoggerInstance {
@@ -349,8 +353,4 @@ export interface LoggerOptions {
 	 * Enable debug method. When is true: logger.debug() will works.
 	 */
 	debug?: boolean;
-}
-
-for (const m of Logger.CONSOLE_METHODS_KEYS) {
-	Object.defineProperty(Logger.CONSOLE_METHODS, m, { value: console[m], writable: false });
 }
