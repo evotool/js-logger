@@ -38,7 +38,7 @@ describe('index', () => {
 		logger = new Logger({ debug: false });
 		logger.debug();
 
-		logger = Logger.useName('test');
+		logger = Logger.withName('test');
 		expect(logger.logname).toBe('test');
 		logger = logger.name('');
 		expect(logger.logname).toBe('test');
