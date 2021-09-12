@@ -1,5 +1,5 @@
 import type { ConsoleMethodName } from './constants';
-import { CONSOLE_METHOD_NAMES } from './constants';
+import { LOGGER_METHOD_NAMES } from './constants';
 
 const NATIVE_PREPARE_STACK_TRACE = Error.prepareStackTrace;
 const OVERRIDED_PREPARE_STACK_TRACE = (e: Error, s: NodeJS.CallSite[]): NodeJS.CallSite[] => s;
@@ -46,7 +46,7 @@ export class Caller {
         continue;
       }
 
-      if (foundHandle && CONSOLE_METHOD_NAMES.includes(methodName as ConsoleMethodName)) {
+      if (foundHandle && LOGGER_METHOD_NAMES.includes(methodName as ConsoleMethodName)) {
         callSite = callSites[i + level + 1];
 
         const startIndex = i + level + 2;

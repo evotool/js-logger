@@ -72,14 +72,14 @@ export default class Logger {
   }
 
   /**
-   * Create a record with 'debug' log type.
+   * Create debug log.
    */
   log = (...args: any[]): void => {
     Logger._handle(this as unknown as LoggerInstance, 'debug', args);
   };
 
   /**
-   * Create a record with 'debug' log type. Enable debug for working.
+   * Create debug log. Enable debug for working.
    */
   debug = (...args: any[]): void => {
     if (this._debugMode) {
@@ -88,44 +88,51 @@ export default class Logger {
   };
 
   /**
-   * Create a record with 'info' log type.
+   * Create info log.
    */
   info = (...args: any[]): void => {
     Logger._handle(this as unknown as LoggerInstance, 'info', args);
   };
 
   /**
-   * Create a record with 'warn' log type.
+   * Create warn log.
    */
   warn = (...args: any[]): void => {
     Logger._handle(this as unknown as LoggerInstance, 'warn', args);
   };
 
   /**
-   * Create a record with 'trace' log type.
+   * Create trace log.
    */
   trace = (...args: any[]): void => {
     Logger._handle(this as unknown as LoggerInstance, 'trace', args);
   };
 
   /**
-   * Create a record with 'error' log type.
+   * Create error log.
    */
   error = (...args: any[]): void => {
     Logger._handle(this as unknown as LoggerInstance, 'error', args);
   };
 
   /**
-   * Create a record with 'critical' log type.
+   * Create critical log.
    */
   critical = (...args: any[]): void => {
     Logger._handle(this as unknown as LoggerInstance, 'critical', args);
   };
 
   /**
-   * Create a record with 'verbose' log type.
+   * Create verbose log.
    */
   dir = (...args: any[]): void => {
+    Logger._handle(this as unknown as LoggerInstance, 'verbose', args);
+  };
+
+  /**
+   * Create verbose log.
+   */
+  verbose = (...args: any[]): void => {
     Logger._handle(this as unknown as LoggerInstance, 'verbose', args);
   };
 
@@ -225,14 +232,14 @@ export default class Logger {
   }
 
   /**
-   * Create a record with 'debug' log type.
+   * Create debug log.
    */
   static log = (...args: any[]): void => {
     Logger._handle(Logger as unknown as LoggerInstance, 'debug', args);
   };
 
   /**
-   * Create a record with 'debug' log type. Enable debug for working.
+   * Create debug log. Enable debug for working.
    */
   static debug = (...args: any[]): void => {
     if (Logger._debugMode) {
@@ -241,44 +248,51 @@ export default class Logger {
   };
 
   /**
-   * Create a record with 'info' log type.
+   * Create info log.
    */
   static info = (...args: any[]): void => {
     Logger._handle(Logger as unknown as LoggerInstance, 'info', args);
   };
 
   /**
-   * Create a record with 'warn' log type.
+   * Create warn log.
    */
   static warn = (...args: any[]): void => {
     Logger._handle(Logger as unknown as LoggerInstance, 'warn', args);
   };
 
   /**
-   * Create a record with 'trace' log type.
+   * Create trace log.
    */
   static trace = (...args: any[]): void => {
     Logger._handle(Logger as unknown as LoggerInstance, 'trace', args);
   };
 
   /**
-   * Create a record with 'error' log type.
+   * Create error log.
    */
   static error = (...args: any[]): void => {
     Logger._handle(Logger as unknown as LoggerInstance, 'error', args);
   };
 
   /**
-   * Create a record with 'critical' log type.
+   * Create critical log.
    */
   static critical = (...args: any[]): void => {
     Logger._handle(Logger as unknown as LoggerInstance, 'critical', args);
   };
 
   /**
-   * Create a record with 'verbose' log type.
+   * Create verbose log.
    */
   static dir = (...args: any[]): void => {
+    Logger._handle(Logger as unknown as LoggerInstance, 'verbose', args);
+  };
+
+  /**
+   * Create verbose log.
+   */
+  static verbose = (...args: any[]): void => {
     Logger._handle(Logger as unknown as LoggerInstance, 'verbose', args);
   };
 }
