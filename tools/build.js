@@ -14,5 +14,5 @@ writeFileSync(resolve(__dirname, '../dist/package.json'), JSON.stringify(package
 const jsTsFiles = sync(resolve(__dirname, '../dist/**/*.{js,ts}'));
 
 for (const f of jsTsFiles) {
-	writeFileSync(f, readFileSync(f, 'utf-8').replace(/ {4}/g, '\t'));
+  writeFileSync(f, readFileSync(f, 'utf-8').replace(/ {4}/g, '\t'));
 }

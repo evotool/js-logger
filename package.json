@@ -1,6 +1,6 @@
 {
   "name": "@evojs/logger",
-  "version": "1.4.0",
+  "version": "1.6.0",
   "description": "Nodejs logger",
   "license": "MIT",
   "main": "index.js",
@@ -11,17 +11,20 @@
     "prepublishOnly": "npm run build && npm run test && node tools/prepublish.js",
     "release": "RELEASE_MODE=1 npm run prepublishOnly && npm publish --access public dist/",
     "test": "jest --coverage --detectOpenHandles",
-    "lint": "eslint \"src/**/*.ts\" -f codeframe"
+    "lint": "eslint \"src/**/*.ts\" -f codeframe --fix"
+  },
+  "dependencies": {
+    "source-map-support": "^0.5.20"
   },
   "devDependencies": {
-    "@evojs/eslint-plugin": "^1.5.7",
-    "@types/jest": "^26.0.24",
-    "@types/node": "^16.4.10",
+    "@evojs/eslint-plugin": "^1.6.2",
+    "@types/jest": "^27.0.1",
+    "@types/node": "^16.9.1",
     "eslint": "^7.32.0",
     "glob": "^7.1.7",
-    "jest": "^27.0.6",
-    "ts-jest": "^27.0.4",
-    "typescript": "^4.3.5"
+    "jest": "^27.1.1",
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.4.3"
   },
   "engines": {
     "node": "^10.12.0 || >=12.0.0"
