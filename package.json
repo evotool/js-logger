@@ -1,6 +1,6 @@
 {
   "name": "@evojs/logger",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Nodejs logger",
   "license": "MIT",
   "main": "index.js",
@@ -20,6 +20,7 @@
     "@evojs/eslint-plugin": "^1.6.2",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.9.1",
+    "@types/source-map-support": "^0.5.4",
     "eslint": "^7.32.0",
     "glob": "^7.1.7",
     "jest": "^27.1.1",

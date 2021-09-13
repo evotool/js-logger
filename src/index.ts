@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import { CONSOLE_METHOD_NAMES } from './constants';
 import type { Level, Meta, Pipes } from './log';
 import { Log } from './log';

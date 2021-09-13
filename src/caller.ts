@@ -1,3 +1,7 @@
+import { install, wrapCallSite } from 'source-map-support';
+
+install();
+
 import type { ConsoleMethodName } from './constants';
 import { LOGGER_METHOD_NAMES } from './constants';
 
@@ -66,6 +70,6 @@ export class Caller {
     const callSites = new Error().stack as unknown as ReturnType<typeof OVERRIDED_PREPARE_STACK_TRACE>;
     Error.prepareStackTrace = NATIVE_PREPARE_STACK_TRACE;
 
-    return callSites;
+    return callSites.map(wrapCallSite);
   }
 }
