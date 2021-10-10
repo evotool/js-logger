@@ -1,24 +1,24 @@
-import type { LogLevel, LogPipes } from './log';
+import type { LogFormatFn, LogLevel, LogPipes } from './log';
 import { Log } from './log';
 
 export * from './log';
 export * from './caller';
 
 export default class Logger {
-  static logname?: string | undefined;
+  static logname: string = '';
 
   private static readonly _pipes: LogPipes = {};
-  private static readonly _formats: string[] = [];
+  private static readonly _formats: (string | LogFormatFn)[] = [];
   private static _writing: boolean = false;
   private static _callerLevel: number | undefined;
-  private _logname: string | undefined;
+  private _logname: string;
 
-  get logname(): string | undefined {
+  get logname(): string {
     return this._logname;
   }
 
   private readonly _pipes: LogPipes = {};
-  private readonly _formats: string[];
+  private readonly _formats: (string | LogFormatFn)[];
   private readonly _handler: LoggerHandler;
   private readonly _callerLevel: number | undefined;
 
@@ -100,20 +100,27 @@ export default class Logger {
     Logger._handle(this as unknown as LoggerInstance, 'verbose', args);
   }
 
+  /**
+   * Create verbose log.
+   */
+  log(level: LogLevel, name: string = this.logname, ...args: any[]): void {
+    Logger._handle(this as unknown as LoggerInstance, level, args, name);
+  }
+
   private static _handler = (log: Log): void => {};
 
-  private static _handle(instance: LoggerInstance, level: LogLevel, args: any[]): void {
+  private static _handle(instance: LoggerInstance, level: LogLevel, args: any[], logname: string = instance.logname): void {
     if (this._writing) {
-      process.nextTick(this._handle.bind(this), instance, level, args);
+      process.nextTick(this._handle.bind(this), instance, level, args, logname);
 
       return;
     }
 
     this._writing = true;
 
-    const { logname, _formats, _pipes, _handler, _callerLevel } = instance as unknown as LoggerInstance;
-    const record = new Log(logname, _formats, _pipes, level, args, _callerLevel || this._callerLevel);
-    _handler.call(instance, record);
+    const { _formats, _pipes, _handler, _callerLevel } = instance as unknown as LoggerInstance;
+    const log = new Log(logname, _formats, _pipes, level, args, _callerLevel || this._callerLevel);
+    _handler.call(instance, log);
 
     this._writing = false;
   }
@@ -122,7 +129,7 @@ export default class Logger {
    * Set global options.
    */
   static configure(options: LoggerOptions): void {
-    Logger.logname = options.name;
+    Logger.logname = options.name || '';
 
     if (Array.isArray(options.formats)) {
       Logger._formats.splice(0, Logger._formats.length, ...options.formats);
@@ -185,6 +192,13 @@ export default class Logger {
   static verbose(...args: any[]): void {
     this._handle(this as unknown as LoggerInstance, 'verbose', args);
   }
+
+  /**
+   * Create any level log with custom name.
+   */
+  static log(level: LogLevel, name: string = this.logname, ...args: any[]): void {
+    Logger._handle(this as unknown as LoggerInstance, level, args, name);
+  }
 }
 
 process.on('uncaughtException', (err) => {
@@ -195,9 +209,9 @@ process.on('uncaughtException', (err) => {
 type LoggerHandler = (log: Log) => void;
 
 interface LoggerInstance {
-  logname: string | undefined;
+  logname: string;
   _pipes: LogPipes;
-  _formats: string[];
+  _formats: (string | LogFormatFn)[];
   _debugMode: boolean;
   _handler: LoggerHandler;
   _callerLevel?: number;
@@ -213,7 +227,7 @@ export interface LoggerOptions {
   /**
    * Output message formats.
    */
-  formats?: string[];
+  formats?: (string | LogFormatFn)[];
 
   /**
    * Functions for message formatting.
