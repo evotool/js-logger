@@ -40,7 +40,7 @@ export default class Logger {
   useName(name: string | Function, callerLevel?: number): Logger {
     const logger = this.clone(callerLevel);
 
-    this._logname = [logger.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.');
+    logger._logname = [logger.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.');
 
     return logger;
   }
@@ -148,7 +148,9 @@ export default class Logger {
    * Create a new logger with the name.
    */
   static useName(name: string | Function, callerLevel?: number): Logger {
-    return new this({ name: [this.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.'), callerLevel });
+    name = [this.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.');
+
+    return new this({ name, callerLevel });
   }
 
   /**
