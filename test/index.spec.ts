@@ -33,7 +33,7 @@ describe('index', () => {
   });
 
   it('should configure default Logger options', (done) => {
-    expect(Logger.logname).toBeUndefined();
+    expect(Logger.logname).toBe('');
     Logger.configure({
       name: 'app',
       formats: [
@@ -70,6 +70,7 @@ describe('index', () => {
     Logger
       .useName('test', 1)
       .verbose('test message');
+
     expect(Logger.logname).toBe('app');
     expect(log.name).toBe('app.test');
 

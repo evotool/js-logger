@@ -103,7 +103,7 @@ export class Log {
     return {
       date: this.date,
       level: this.level,
-      name: this.name,
+      name: this.name || undefined,
       args: this.args,
       caller: this.caller,
     };
