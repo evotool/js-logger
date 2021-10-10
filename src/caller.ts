@@ -1,9 +1,9 @@
 import { install, wrapCallSite } from 'source-map-support';
 
-install();
+import type { LogLevel } from '.';
+import { LOG_LEVELS } from '.';
 
-import type { ConsoleMethodName } from './constants';
-import { LOGGER_METHOD_NAMES } from './constants';
+install();
 
 const NATIVE_PREPARE_STACK_TRACE = Error.prepareStackTrace;
 const OVERRIDED_PREPARE_STACK_TRACE = (e: Error, s: NodeJS.CallSite[]): NodeJS.CallSite[] => s;
@@ -33,7 +33,7 @@ export class Caller {
   /**
 	 * Create caller.
 	 */
-  static create(level: number = 0, maxCallersCount: number = Caller.MAX_CALLERS_COUNT): Caller | null {
+  static create(level: number, maxCallersCount: number = Caller.MAX_CALLERS_COUNT): Caller | null {
     let methodName: string | null;
 
     const callSites = this._getCallSites();
@@ -50,10 +50,11 @@ export class Caller {
         continue;
       }
 
-      if (foundHandle && LOGGER_METHOD_NAMES.includes(methodName as ConsoleMethodName)) {
-        callSite = callSites[i + level + 1];
+      if (foundHandle && LOG_LEVELS.includes(methodName as LogLevel)) {
+        const j = i + level;
+        callSite = callSites[j + 1];
 
-        const startIndex = i + level + 2;
+        const startIndex = j + 2;
         const endIndex = startIndex + maxCallersCount;
         const parentCallSites = callSites.slice(startIndex, endIndex);
 
@@ -70,6 +71,6 @@ export class Caller {
     const callSites = new Error().stack as unknown as ReturnType<typeof OVERRIDED_PREPARE_STACK_TRACE>;
     Error.prepareStackTrace = NATIVE_PREPARE_STACK_TRACE;
 
-    return callSites.map(wrapCallSite);
+    return callSites.map(wrapCallSite) as NodeJS.CallSite[];
   }
 }

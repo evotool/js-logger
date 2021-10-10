@@ -5,44 +5,29 @@ import type { Caller } from '../src';
 import Logger, { Log } from '../src';
 
 describe('index', () => {
-  let record!: Log;
+  let log!: Log;
 
   it('should test all basic methods', (done) => {
-    Logger.configure({
-      debug: false,
-    });
-    Logger.debug();
-    Logger.configure({
-      debug: true,
-    });
-    Logger.log();
-    Logger.info();
-    Logger.error();
-    Logger.dir();
-    Logger.warn();
-    Logger.debug();
-    Logger.trace();
     Logger.critical();
+    Logger.error();
+    Logger.warn();
+    Logger.info();
+    Logger.debug();
+    Logger.verbose();
 
-    let logger = new Logger({ debug: true });
+    let logger = new Logger({ });
     // @ts-ignore
-    logger._handler.call({}, new Log(undefined, [], {}, {}, 'info', [], Date.now()));
-    logger.meta({});
-    logger.log();
-    logger.info();
-    logger.error();
-    logger.dir();
-    logger.warn();
-    logger.debug();
-    logger.trace();
+    logger._handler.call({}, new Log(undefined, [], {}, 'info', []));
     logger.critical();
-
-    logger = new Logger({ debug: false });
+    logger.error();
+    logger.warn();
+    logger.info();
     logger.debug();
+    logger.verbose();
 
-    logger = Logger.withName('test');
+    logger = Logger.useName('test');
     expect(logger.logname).toBe('test');
-    logger = logger.name('');
+    logger = logger.useName('');
     expect(logger.logname).toBe('test');
     done();
   });
@@ -51,7 +36,6 @@ describe('index', () => {
     expect(Logger.logname).toBeUndefined();
     Logger.configure({
       name: 'app',
-      meta: { appId: 'test' },
       formats: [
         `{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}`,
         'json',
@@ -69,12 +53,12 @@ describe('index', () => {
         message(args: any[]): string {
           return args.map((x) => typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false)).join('\n');
         },
-        file({ fileName, line, column }: Caller): string {
+        file({ fileName, line = 0, column = 0 }: Caller = {}): string {
           return `${fileName}:${line}:${column}`;
         },
       },
       handler(r: Log): void {
-        record = r;
+        log = r;
       },
     });
     expect(Logger.logname).toBe('app');
@@ -82,25 +66,19 @@ describe('index', () => {
     done();
   });
 
-  it('should be override console methods', (done) => {
-    Logger.overrideConsole();
-    done();
-  });
-
   it('should be create messages by formats', (done) => {
-    console
-      .meta({ test: 1 })
-      .name('test')
-      .log('test message');
+    Logger
+      .useName('test', 1)
+      .verbose('test message');
     expect(Logger.logname).toBe('app');
-    expect(record.name).toBe('app.test');
-    expect(record.meta.test).toBe(1);
+    expect(log.name).toBe('app.test');
 
-    const logger = console.name('test');
-    expect(logger.logname).toBe('test');
+    const logger = Logger.useName('test');
+    expect(logger.logname).toBe('app.test');
 
-    const [consoleMessage, json] = record.messages() as [string, string];
-    expect((/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z DEBUG <app\.test> test message\s+.+:\d+:\d+$/).test(consoleMessage)).toBe(true);
+    const [message, json] = log.messages() as [string, string];
+
+    expect((/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z VERBOSE <app\.test> test message\s+.+:\d+:\d+$/).test(message)).toBe(true);
 
     const obj = JSON.parse(json);
     expect(obj).toBeDefined();

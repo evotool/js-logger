@@ -1,5 +1,4 @@
-import { CONSOLE_METHOD_NAMES } from './constants';
-import type { Level, Meta, Pipes } from './log';
+import type { LogLevel, LogPipes } from './log';
 import { Log } from './log';
 
 export * from './log';
@@ -8,18 +7,18 @@ export * from './caller';
 export default class Logger {
   static logname?: string | undefined;
 
-  private static readonly _meta: Meta = {};
-  private static readonly _pipes: Pipes = {};
+  private static readonly _pipes: LogPipes = {};
   private static readonly _formats: string[] = [];
-  private static _debugMode: boolean = false;
   private static _writing: boolean = false;
   private static _callerLevel: number | undefined;
+  private _logname: string | undefined;
 
-  readonly logname: string | undefined;
-  private readonly _meta: Meta = {};
-  private readonly _pipes: Pipes = {};
+  get logname(): string | undefined {
+    return this._logname;
+  }
+
+  private readonly _pipes: LogPipes = {};
   private readonly _formats: string[];
-  private readonly _debugMode: boolean;
   private readonly _handler: LoggerHandler;
   private readonly _callerLevel: number | undefined;
 
@@ -27,33 +26,23 @@ export default class Logger {
    * Create new Logger with custom options
    */
   constructor(options: LoggerOptions = {}) {
-    this.logname = options.name || Logger.logname;
-    this._debugMode = typeof options.debug === 'boolean' ? options.debug : Logger._debugMode;
-    this._formats = Array.from(Array.isArray(options.formats) ? options.formats : Logger._formats);
-    this._handler = typeof options.handler === 'function' ? options.handler : Logger._handler;
-    Object.assign(this._pipes, Logger._pipes, options.pipes || {});
-    Object.assign(this._meta, Logger._meta, options.meta || {});
+    const { name = Logger.logname, formats = Logger._formats, handler = Logger._handler } = options;
+
+    this._logname = name;
+    this._formats = formats;
+    this._handler = handler;
+    Object.assign(this._pipes, Logger._pipes, options.pipes);
   }
 
   /**
    * Create a new logger with name and options of current logger.
    */
-  name(name: string, callerLevel?: number): Logger {
+  useName(name: string | Function, callerLevel?: number): Logger {
     const logger = this.clone(callerLevel);
 
-    Object.defineProperty(logger as unknown as LoggerInstance, 'logname', {
-      value: logger.logname && name ? `${logger.logname}.${name}` : name || logger.logname,
-      writable: false,
-    });
+    this._logname = [logger.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.');
 
     return logger;
-  }
-
-  /**
-   * Add metadata to current logger.
-   */
-  meta(meta: Meta): void {
-    Object.assign(this._meta, meta);
   }
 
   /**
@@ -62,7 +51,6 @@ export default class Logger {
   clone(callerLevel?: number): Logger {
     return new Logger({
       name: this.logname,
-      meta: this._meta,
       formats: this._formats,
       pipes: this._pipes,
       handler: this._handler,
@@ -71,73 +59,50 @@ export default class Logger {
   }
 
   /**
-   * Create debug log.
+   * Create critical log.
    */
-  log = (...args: any[]): void => {
-    Logger._handle(this as unknown as LoggerInstance, 'debug', args);
-  };
-
-  /**
-   * Create debug log. Enable debug for working.
-   */
-  debug = (...args: any[]): void => {
-    if (this._debugMode) {
-      Logger._handle(this as unknown as LoggerInstance, 'debug', args);
-    }
-  };
-
-  /**
-   * Create info log.
-   */
-  info = (...args: any[]): void => {
-    Logger._handle(this as unknown as LoggerInstance, 'info', args);
-  };
-
-  /**
-   * Create warn log.
-   */
-  warn = (...args: any[]): void => {
-    Logger._handle(this as unknown as LoggerInstance, 'warn', args);
-  };
-
-  /**
-   * Create trace log.
-   */
-  trace = (...args: any[]): void => {
-    Logger._handle(this as unknown as LoggerInstance, 'trace', args);
-  };
+  critical(...args: any[]): void {
+    Logger._handle(this as unknown as LoggerInstance, 'critical', args);
+  }
 
   /**
    * Create error log.
    */
-  error = (...args: any[]): void => {
+  error(...args: any[]): void {
     Logger._handle(this as unknown as LoggerInstance, 'error', args);
-  };
+  }
 
   /**
-   * Create critical log.
+   * Create warn log.
    */
-  critical = (...args: any[]): void => {
-    Logger._handle(this as unknown as LoggerInstance, 'critical', args);
-  };
+  warn(...args: any[]): void {
+    Logger._handle(this as unknown as LoggerInstance, 'warn', args);
+  }
+
+  /**
+   * Create info log.
+   */
+  info(...args: any[]): void {
+    Logger._handle(this as unknown as LoggerInstance, 'info', args);
+  }
+
+  /**
+   * Create debug log. Enable debug for working.
+   */
+  debug(...args: any[]): void {
+    Logger._handle(this as unknown as LoggerInstance, 'debug', args);
+  }
 
   /**
    * Create verbose log.
    */
-  dir = (...args: any[]): void => {
+  verbose(...args: any[]): void {
     Logger._handle(this as unknown as LoggerInstance, 'verbose', args);
-  };
+  }
 
-  /**
-   * Create verbose log.
-   */
-  verbose = (...args: any[]): void => {
-    Logger._handle(this as unknown as LoggerInstance, 'verbose', args);
-  };
+  private static _handler = (log: Log): void => {};
 
-  private static _handler = (record: Log): void => {};
-
-  private static _handle(instance: LoggerInstance, level: Level, args: any[]): void {
+  private static _handle(instance: LoggerInstance, level: LogLevel, args: any[]): void {
     if (this._writing) {
       process.nextTick(this._handle.bind(this), instance, level, args);
 
@@ -147,20 +112,10 @@ export default class Logger {
     this._writing = true;
 
     const { logname, _formats, _pipes, _handler, _callerLevel } = instance as unknown as LoggerInstance;
-    const meta = this._getMeta(instance);
-    const record = new Log(logname, _formats, _pipes, meta, level, args, _callerLevel || this._callerLevel);
+    const record = new Log(logname, _formats, _pipes, level, args, _callerLevel || this._callerLevel);
     _handler.call(instance, record);
 
     this._writing = false;
-  }
-
-  private static _getMeta(instance?: LoggerInstance): Meta {
-    // @ts-ignore
-    if (!instance || instance === this) {
-      return { ...Logger._meta };
-    }
-
-    return { ...Logger._meta, ...instance._meta };
   }
 
   /**
@@ -169,21 +124,11 @@ export default class Logger {
   static configure(options: LoggerOptions): void {
     Logger.logname = options.name;
 
-    if (options.debug) {
-      Logger._debugMode = true;
-    }
-
     if (Array.isArray(options.formats)) {
       Logger._formats.splice(0, Logger._formats.length, ...options.formats);
     }
 
-    if (options.pipes && typeof options.pipes === 'object') {
-      Object.assign(Logger._pipes, options.pipes);
-    }
-
-    if (options.meta && typeof options.meta === 'object') {
-      Object.assign(Logger._meta, options.meta);
-    }
+    Object.assign(Logger._pipes, options.pipes);
 
     if (typeof options.handler === 'function') {
       Logger._handler = options.handler;
@@ -193,135 +138,65 @@ export default class Logger {
   }
 
   /**
-   * Override console methods.
-   */
-  static overrideConsole(): void {
-    (global as any).__console = { ...console };
-
-    Object.defineProperty(console, 'logger', { value: Logger as unknown as LoggerInstance, writable: false });
-
-    for (const m of CONSOLE_METHOD_NAMES) {
-      console[m] = Logger[m].bind(Logger);
-    }
-
-    console.meta = (meta: Meta): Logger => Logger.meta(meta);
-    console.name = (name: string): Logger => Logger.withName(name);
-
-    process.on('uncaughtException', (err) => {
-      Logger.critical(err);
-      process.exit(0);
-    });
-  }
-
-  /**
    * Create a new logger with the name.
    */
-  static withName(name: string): Logger {
-    return new Logger({ name });
+  static useName(name: string | Function, callerLevel?: number): Logger {
+    return new this({ name: [this.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.'), callerLevel });
   }
 
   /**
-   * Create a new logger with metadata.
+   * Create critical log.
    */
-  static meta(meta: Meta): Logger {
-    const logger = new Logger();
-    Object.assign(logger._meta, meta);
+  static critical(...args: any[]): void {
+    this._handle(this as unknown as LoggerInstance, 'critical', args);
+  }
 
-    return logger;
+  /**
+   * Create error log.
+   */
+  static error(...args: any[]): void {
+    this._handle(this as unknown as LoggerInstance, 'error', args);
+  }
+
+  /**
+   * Create warn log.
+   */
+  static warn(...args: any[]): void {
+    this._handle(this as unknown as LoggerInstance, 'warn', args);
+  }
+
+  /**
+   * Create info log.
+   */
+  static info(...args: any[]): void {
+    this._handle(this as unknown as LoggerInstance, 'info', args);
   }
 
   /**
    * Create debug log.
    */
-  static log = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'debug', args);
-  };
-
-  /**
-   * Create debug log. Enable debug for working.
-   */
-  static debug = (...args: any[]): void => {
-    if (Logger._debugMode) {
-      Logger._handle(Logger as unknown as LoggerInstance, 'debug', args);
-    }
-  };
-
-  /**
-   * Create info log.
-   */
-  static info = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'info', args);
-  };
-
-  /**
-   * Create warn log.
-   */
-  static warn = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'warn', args);
-  };
-
-  /**
-   * Create trace log.
-   */
-  static trace = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'trace', args);
-  };
-
-  /**
-   * Create error log.
-   */
-  static error = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'error', args);
-  };
-
-  /**
-   * Create critical log.
-   */
-  static critical = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'critical', args);
-  };
+  static debug(...args: any[]): void {
+    this._handle(this as unknown as LoggerInstance, 'debug', args);
+  }
 
   /**
    * Create verbose log.
    */
-  static dir = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'verbose', args);
-  };
-
-  /**
-   * Create verbose log.
-   */
-  static verbose = (...args: any[]): void => {
-    Logger._handle(Logger as unknown as LoggerInstance, 'verbose', args);
-  };
-}
-
-declare global {
-  interface Console {
-
-    /**
-     * Logger type.
-     */
-    logger: typeof Logger;
-
-    /**
-     * Create a new logger with metadata.
-     */
-    meta(meta: Meta): Logger;
-
-    /**
-     * Create a new logger with name.
-     */
-    name(name: string): Logger;
+  static verbose(...args: any[]): void {
+    this._handle(this as unknown as LoggerInstance, 'verbose', args);
   }
 }
+
+process.on('uncaughtException', (err) => {
+  Logger.critical(err);
+  process.exit(0);
+});
 
 type LoggerHandler = (log: Log) => void;
 
 interface LoggerInstance {
   logname: string | undefined;
-  _meta: Meta;
-  _pipes: Pipes;
+  _pipes: LogPipes;
   _formats: string[];
   _debugMode: boolean;
   _handler: LoggerHandler;
@@ -336,11 +211,6 @@ export interface LoggerOptions {
   name?: string;
 
   /**
-   * Object with logger metadata.
-   */
-  meta?: Meta;
-
-  /**
    * Output message formats.
    */
   formats?: string[];
@@ -348,17 +218,12 @@ export interface LoggerOptions {
   /**
    * Functions for message formatting.
    */
-  pipes?: Pipes;
+  pipes?: LogPipes;
 
   /**
    * Output record handler. Set the handler for handle output messages.
    */
   handler?: (record: Log) => void;
-
-  /**
-   * Enable debug method. When is true: logger.debug() will works.
-   */
-  debug?: boolean;
 
   /**
    * Caller level

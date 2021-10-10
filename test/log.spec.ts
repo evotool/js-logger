@@ -29,7 +29,7 @@ const pipes = {
 
 describe('log', () => {
   it('should create new log and resolve messages', () => {
-    const log = new Log('app.test', ['json', format], pipes, {}, level, ['test', 'message']);
+    const log = new Log('app.test', ['json', format], pipes, level, ['test', 'message']);
 
     const [jsonMessage, consoleMessage] = log.messages() as [string, string];
     expect(jsonMessage).toBeTruthy();
@@ -40,7 +40,7 @@ describe('log', () => {
   });
 
   it('should throw error of undefined pipe', () => {
-    const log = new Log(undefined, ['{{ date | ts }}'], pipes, {}, level, ['test', 'message']);
+    const log = new Log(undefined, ['{{ date | ts }}'], pipes, level, ['test', 'message']);
 
     expect(() => {
       log.messages();
@@ -48,13 +48,13 @@ describe('log', () => {
   });
 
   it('should return prop without pipe', () => {
-    const log = new Log(undefined, ['{{ level }}'], {}, {}, level, ['test', 'message']);
+    const log = new Log(undefined, ['{{ level }}'], {}, level, ['test', 'message']);
     const [message] = log.messages();
     expect(message).toBe(level);
   });
 
   it('should return prop without pipe', () => {
-    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, {}, level, []);
+    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, []);
 
     Object.defineProperty(Log, 'lineLength', {
       get: () => 0,
@@ -72,7 +72,7 @@ describe('log', () => {
 
   it('should return message with linebreak', () => {
     const level = 'info';
-    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, {}, level, []);
+    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, []);
     const [message] = log.messages() as [string];
     const regex = new RegExp(`^${level}\\s+${level}$`);
     expect(regex.test(message)).toBe(true);
@@ -82,7 +82,7 @@ describe('log', () => {
     const circular = { circular: null as any };
     circular.circular = circular;
 
-    const log = new Log(undefined, ['json'], {}, {}, level, [circular]);
+    const log = new Log(undefined, ['json'], {}, level, [circular]);
     const [jsonMessage] = log.messages() as [string];
     const json = JSON.parse(jsonMessage);
     expect(json.level).toBe(level);

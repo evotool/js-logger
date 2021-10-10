@@ -1,44 +1,41 @@
 import { Caller } from './caller';
 import { resolveSeparators } from './utils';
 
-export type Meta = Readonly<Record<string, unknown>>;
-
-export type Level = 'debug' | 'info' | 'warn' | 'error' | 'critical' | 'verbose' | 'trace';
+export type LogLevel = 'critical' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
+export const LOG_LEVELS: LogLevel[] = ['critical', 'error', 'warn', 'info', 'debug', 'verbose'];
 
 export interface Message {
-  args: unknown;
-  caller: unknown;
-  date: unknown;
-  level: unknown;
-  meta: unknown;
-  name: unknown;
+  date: number;
+  level: LogLevel;
+  name?: string;
+  args: unknown[];
+  caller?: Caller | null;
 }
 
 export type PipeFn = (...args: any[]) => unknown;
 
-export type Pipes = Readonly<Record<string, PipeFn>>;
+export type LogPipes = Readonly<Record<string, PipeFn>>;
 
 const FORMAT_REPLACE_MASK = /\{\{\s*([a-zA-Z_$][0-9a-zA-Z_$]+)(?:\s*\|\s*([a-zA-Z_$][0-9a-zA-Z_$]+))?\s*\}\}/g;
 
-export type FormatFn = (this: Pipes, message: Message) => unknown;
+export type LogFormatFn = (this: LogPipes, message: Message) => unknown;
 
 export class Log {
   protected static lineLength: number = 0;
   static separator: string = '<-|->';
 
-  readonly caller: Caller | null;
+  readonly caller?: Caller | null;
   readonly date: number = Date.now();
 
   constructor(
     readonly name: string | undefined,
-    readonly formats: (string | FormatFn)[],
-    readonly pipes: Pipes,
-    readonly meta: Meta,
-    readonly level: Level,
+    readonly formats: (string | LogFormatFn)[],
+    readonly pipes: LogPipes,
+    readonly level: LogLevel,
     readonly args: any[],
     readonly callerLevel: number = 0,
   ) {
-    this.caller = Caller.create(callerLevel);
+    this.caller = callerLevel > 0 ? Caller.create(callerLevel) : undefined;
     this.pipes = pipes;
   }
 
@@ -104,12 +101,11 @@ export class Log {
    */
   toMessage(): Message {
     return {
-      args: this.args,
-      caller: this.caller,
       date: this.date,
       level: this.level,
-      meta: this.meta,
       name: this.name,
+      args: this.args,
+      caller: this.caller,
     };
   }
 }
