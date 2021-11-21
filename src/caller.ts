@@ -69,6 +69,7 @@ export class Caller {
     Error.prepareStackTrace = OVERRIDED_PREPARE_STACK_TRACE;
 
     const callSites = new Error().stack as unknown as ReturnType<typeof OVERRIDED_PREPARE_STACK_TRACE>;
+
     Error.prepareStackTrace = NATIVE_PREPARE_STACK_TRACE;
 
     return callSites.map(wrapCallSite) as NodeJS.CallSite[];

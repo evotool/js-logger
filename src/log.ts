@@ -33,9 +33,9 @@ export class Log {
     readonly pipes: LogPipes,
     readonly level: LogLevel,
     readonly args: any[],
-    readonly callerLevel: number = 0,
+    readonly callerLevel?: number,
   ) {
-    this.caller = callerLevel > 0 ? Caller.create(callerLevel) : undefined;
+    this.caller = callerLevel! >= 0 ? Caller.create(callerLevel!) : undefined;
     this.pipes = pipes;
   }
 

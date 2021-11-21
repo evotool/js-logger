@@ -26,11 +26,16 @@ export default class Logger {
    * Create new Logger with custom options
    */
   constructor(options: LoggerOptions = {}) {
-    const { name = Logger.logname, formats = Logger._formats, handler = Logger._handler } = options;
+    const {
+      name = Logger.logname,
+      formats = Logger._formats,
+      handler = Logger._handler,
+    } = options;
 
     this._logname = name;
     this._formats = formats;
     this._handler = handler;
+
     Object.assign(this._pipes, Logger._pipes, options.pipes);
   }
 
@@ -40,7 +45,8 @@ export default class Logger {
   useName(name: string | Function, callerLevel?: number): Logger {
     const logger = this.clone(callerLevel);
 
-    logger._logname = [logger.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.');
+    name = typeof name === 'function' ? name.name : name;
+    logger._logname = [logger.logname, name].filter(Boolean).join('.');
 
     return logger;
   }
@@ -109,7 +115,12 @@ export default class Logger {
 
   private static _handler = (log: Log): void => {};
 
-  private static _handle(instance: LoggerInstance, level: LogLevel, args: any[], logname: string = instance.logname): void {
+  private static _handle(
+    instance: LoggerInstance,
+    level: LogLevel,
+    args: any[],
+    logname: string = instance.logname,
+  ): void {
     if (this._writing) {
       process.nextTick(this._handle.bind(this), instance, level, args, logname);
 
@@ -118,8 +129,22 @@ export default class Logger {
 
     this._writing = true;
 
-    const { _formats, _pipes, _handler, _callerLevel } = instance as unknown as LoggerInstance;
-    const log = new Log(logname, _formats, _pipes, level, args, _callerLevel || this._callerLevel);
+    const {
+      _formats,
+      _pipes,
+      _handler,
+      _callerLevel,
+    } = instance as unknown as LoggerInstance;
+
+    const log = new Log(
+      logname,
+      _formats,
+      _pipes,
+      level,
+      args,
+      _callerLevel || this._callerLevel,
+    );
+
     _handler.call(instance, log);
 
     this._writing = false;
@@ -148,7 +173,8 @@ export default class Logger {
    * Create a new logger with the name.
    */
   static useName(name: string | Function, callerLevel?: number): Logger {
-    name = [this.logname, typeof name === 'function' ? name.name : name].filter(Boolean).join('.');
+    name = typeof name === 'function' ? name.name : name;
+    name = [this.logname, name].filter(Boolean).join('.');
 
     return new this({ name, callerLevel });
   }
@@ -237,9 +263,9 @@ export interface LoggerOptions {
   pipes?: LogPipes;
 
   /**
-   * Output record handler. Set the handler for handle output messages.
+   * Output log handler. Set the handler for handle output messages.
    */
-  handler?: (record: Log) => void;
+  handler?: (log: Log) => void;
 
   /**
    * Caller level
