@@ -1,7 +1,7 @@
 import type { Caller } from '../src';
-import { Log } from '../src';
+import { Log, LogLevel } from '../src';
 
-const level = 'info';
+const level = LogLevel.info;
 const format = '{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}';
 const pipes = {
   uppercase(text: string): string {
@@ -71,7 +71,6 @@ describe('log', () => {
   });
 
   it('should return message with linebreak', () => {
-    const level = 'info';
     const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, []);
     const [message] = log.messages() as [string];
     const regex = new RegExp(`^${level}\\s+${level}$`);

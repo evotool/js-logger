@@ -1,8 +1,15 @@
 import { Caller } from './caller';
 import { resolveSeparators } from './utils';
 
-export type LogLevel = 'critical' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
-export const LOG_LEVELS: LogLevel[] = ['critical', 'error', 'warn', 'info', 'debug', 'verbose'];
+export enum LogLevel {
+  critical = 'critical',
+  error = 'error',
+  warn = 'warn',
+  info = 'info',
+  debug = 'debug',
+  verbose = 'verbose',
+}
+export const LOG_LEVELS = Object.values(LogLevel);
 
 export interface Message {
   date: number;

@@ -1,6 +1,6 @@
 {
   "name": "@evojs/logger",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Nodejs logger",
   "license": "MIT",
   "main": "index.js",
@@ -17,15 +17,15 @@
     "source-map-support": "^0.5.21"
   },
   "devDependencies": {
-    "@evojs/eslint-plugin": "~1.7.0",
-    "@types/jest": "^27.0.3",
-    "@types/node": "^16.11.9",
+    "@evojs/eslint-plugin": "~2.5.0",
+    "@types/jest": "^27.4.0",
+    "@types/node": "^16.11.21",
     "@types/source-map-support": "^0.5.4",
-    "eslint": "^7.32.0",
+    "eslint": "^8.7.0",
     "glob": "^7.2.0",
-    "jest": "^27.3.1",
-    "ts-jest": "^27.0.7",
-    "typescript": "^4.5.2"
+    "jest": "^27.4.7",
+    "ts-jest": "^27.1.3",
+    "typescript": "^4.5.4"
   },
   "engines": {
     "node": "^10.12.0 || >=12.0.0"
