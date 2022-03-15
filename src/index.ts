@@ -1,8 +1,11 @@
-import type { LogFormatFn, LogPipes } from './log';
-import { LOG_LEVELS, Log, LogLevel } from './log';
+import { LOG_LEVELS, LogLevel } from './constants';
+import { Log } from './log';
+import type { LogFormatFn, LogPipes, LoggerOptions, _LoggerHandler, _LoggerInstance } from './types';
 
 export * from './log';
 export * from './caller';
+export { LOG_LEVELS, LogLevel } from './constants';
+export { Message, LogFormatFn, LogPipes, PipeFn, LoggerOptions } from './types';
 
 export default class Logger {
   static logname: string = '';
@@ -20,7 +23,7 @@ export default class Logger {
 
   private readonly _pipes: LogPipes = {};
   private readonly _formats: (string | LogFormatFn)[];
-  private readonly _handler: LoggerHandler;
+  private readonly _handler: _LoggerHandler;
   private readonly _callerLevel: number | undefined;
   private readonly _loglevelindex: number;
 
@@ -72,55 +75,55 @@ export default class Logger {
    * Create critical log.
    */
   critical(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.critical, args);
+    Logger._handle(this as unknown as _LoggerInstance, LogLevel.critical, args);
   }
 
   /**
    * Create error log.
    */
   error(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.error, args);
+    Logger._handle(this as unknown as _LoggerInstance, LogLevel.error, args);
   }
 
   /**
    * Create warn log.
    */
   warn(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.warn, args);
+    Logger._handle(this as unknown as _LoggerInstance, LogLevel.warn, args);
   }
 
   /**
    * Create info log.
    */
   info(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.info, args);
+    Logger._handle(this as unknown as _LoggerInstance, LogLevel.info, args);
   }
 
   /**
    * Create debug log. Enable debug for working.
    */
   debug(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.debug, args);
+    Logger._handle(this as unknown as _LoggerInstance, LogLevel.debug, args);
   }
 
   /**
    * Create verbose log.
    */
   verbose(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.verbose, args);
+    Logger._handle(this as unknown as _LoggerInstance, LogLevel.verbose, args);
   }
 
   /**
    * Create verbose log.
    */
   log(level: LogLevel, name: string = this.logname, ...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, level, args, name);
+    Logger._handle(this as unknown as _LoggerInstance, level, args, name);
   }
 
   private static _handler = (log: Log): void => {};
 
   private static _handle(
-    instance: LoggerInstance,
+    instance: _LoggerInstance,
     level: LogLevel,
     args: any[],
     logname: string = instance.logname,
@@ -137,12 +140,7 @@ export default class Logger {
 
     this._writing = true;
 
-    const {
-      _formats,
-      _pipes,
-      _handler,
-      _callerLevel,
-    } = instance;
+    const { _formats, _pipes, _handler, _callerLevel } = instance;
 
     try {
       const log = new Log(
@@ -197,49 +195,49 @@ export default class Logger {
    * Create critical log.
    */
   static critical(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.critical, args);
+    this._handle(this as unknown as _LoggerInstance, LogLevel.critical, args);
   }
 
   /**
    * Create error log.
    */
   static error(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.error, args);
+    this._handle(this as unknown as _LoggerInstance, LogLevel.error, args);
   }
 
   /**
    * Create warn log.
    */
   static warn(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.warn, args);
+    this._handle(this as unknown as _LoggerInstance, LogLevel.warn, args);
   }
 
   /**
    * Create info log.
    */
   static info(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.info, args);
+    this._handle(this as unknown as _LoggerInstance, LogLevel.info, args);
   }
 
   /**
    * Create debug log.
    */
   static debug(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.debug, args);
+    this._handle(this as unknown as _LoggerInstance, LogLevel.debug, args);
   }
 
   /**
    * Create verbose log.
    */
   static verbose(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.verbose, args);
+    this._handle(this as unknown as _LoggerInstance, LogLevel.verbose, args);
   }
 
   /**
    * Create any level log with custom name.
    */
   static log(level: LogLevel, name: string = this.logname, ...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, level, args, name);
+    Logger._handle(this as unknown as _LoggerInstance, level, args, name);
   }
 }
 
@@ -247,49 +245,3 @@ process.on('uncaughtException', (err) => {
   Logger.critical(err);
   process.exit(0);
 });
-
-type LoggerHandler = (log: Log) => void;
-
-interface LoggerInstance {
-  logname: string;
-  _pipes: LogPipes;
-  _formats: (string | LogFormatFn)[];
-  _debugMode: boolean;
-  _handler: LoggerHandler;
-  _loglevelindex: number;
-  _callerLevel?: number;
-}
-
-export interface LoggerOptions {
-
-  /**
-   * Name of the logger.
-   */
-  name?: string;
-
-  /**
-   * Output message formats.
-   */
-  formats?: (string | LogFormatFn)[];
-
-  /**
-   * Functions for message formatting.
-   */
-  pipes?: LogPipes;
-
-  /**
-   * Output log handler. Set the handler for handle output messages.
-   */
-  handler?: (log: Log) => void;
-
-  /**
-   * Output log handler. Set the handler for handle output messages.
-   * @default 'verbose'
-   */
-  logLevel?: LogLevel;
-
-  /**
-   * Caller level
-   */
-  callerLevel?: number;
-}

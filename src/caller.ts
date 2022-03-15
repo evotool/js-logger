@@ -1,13 +1,14 @@
 import { install, wrapCallSite } from 'source-map-support';
 
-import type { LogLevel } from '.';
-import { LOG_LEVELS } from '.';
+import type { LogLevel } from './constants';
+import {
+  HANDLE_METHOD_NAME,
+  LOG_METHODS,
+  NATIVE_PREPARE_STACK_TRACE,
+  OVERRIDED_PREPARE_STACK_TRACE,
+} from './constants';
 
 install();
-
-const NATIVE_PREPARE_STACK_TRACE = Error.prepareStackTrace;
-const OVERRIDED_PREPARE_STACK_TRACE = (e: Error, s: NodeJS.CallSite[]): NodeJS.CallSite[] => s;
-const HANDLE_METHOD_NAME = '_handle';
 
 export class Caller {
   static MAX_CALLERS_COUNT = 1;
@@ -31,8 +32,8 @@ export class Caller {
   }
 
   /**
-	 * Create caller.
-	 */
+   * Create caller.
+   */
   static create(level: number, maxCallersCount: number = Caller.MAX_CALLERS_COUNT): Caller | null {
     let methodName: string | null;
 
@@ -50,7 +51,7 @@ export class Caller {
         continue;
       }
 
-      if (foundHandle && LOG_LEVELS.includes(methodName as LogLevel)) {
+      if (foundHandle && LOG_METHODS.includes(methodName as LogLevel)) {
         const j = i + level;
         callSite = callSites[j + 1];
 
@@ -68,7 +69,9 @@ export class Caller {
   protected static _getCallSites(): NodeJS.CallSite[] {
     Error.prepareStackTrace = OVERRIDED_PREPARE_STACK_TRACE;
 
-    const callSites = new Error().stack as unknown as ReturnType<typeof OVERRIDED_PREPARE_STACK_TRACE>;
+    const callSites = new Error().stack as unknown as ReturnType<
+      typeof OVERRIDED_PREPARE_STACK_TRACE
+    >;
 
     Error.prepareStackTrace = NATIVE_PREPARE_STACK_TRACE;
 

@@ -6,7 +6,6 @@ const packageJson = JSON.parse(readFileSync(resolve(__dirname, '../package.json'
 
 delete packageJson.scripts;
 delete packageJson.jest;
-delete packageJson.eslintConfig;
 delete packageJson.devDependencies;
 
 writeFileSync(resolve(__dirname, '../dist/package.json'), JSON.stringify(packageJson, null, '\t'));

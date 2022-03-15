@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-control-regex
-const ANSI_COLORS_REPLACE_MASK = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+import { ANSI_COLORS_REPLACE_MASK } from './constants';
 
 export function cleanText(text: string): string {
   return text.replace(ANSI_COLORS_REPLACE_MASK, '');
@@ -27,7 +26,8 @@ export function floatRight(maxLength: number, leftText: string, rightText?: stri
 }
 
 export function resolveSeparators(text: string, separator: string, lineLength: number): string {
-  return text.split('\n')
+  return text
+    .split('\n')
     .map((s) => {
       const parts = s.split(separator);
       const res = [];

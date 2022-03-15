@@ -36,7 +36,9 @@ describe('log', () => {
     expect(() => {
       JSON.parse(jsonMessage);
     }).not.toThrowError();
-    expect((/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z INFO <app\.test> test message\s*(?:.+:\d+:\d+)?$/).test(consoleMessage)).toBe(true);
+    expect(
+      (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z INFO <app\.test> test message\s*(?:.+:\d+:\d+)?$/).test(consoleMessage),
+    ).toBe(true);
   });
 
   it('should throw error of undefined pipe', () => {

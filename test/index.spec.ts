@@ -15,7 +15,7 @@ describe('index', () => {
     Logger.debug();
     Logger.verbose();
 
-    let logger = new Logger({ });
+    let logger = new Logger({});
     // @ts-ignore
     logger._handler.call({}, new Log(undefined, [], {}, 'info', []));
     logger.critical();
@@ -51,7 +51,14 @@ describe('index', () => {
           return name ? ` <${name}>` : '';
         },
         message(args: any[]): string {
-          return args.map((x) => typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false)).join('\n');
+          return args
+            .map((x) =>
+              typeof x === 'string'
+                ? x
+                : x instanceof Error
+                  ? x.stack
+                  : inspect(x, false, null, false))
+            .join('\n');
         },
         file({ fileName, line = 0, column = 0 }: Caller = {}): string {
           return `${fileName}:${line}:${column}`;
@@ -67,9 +74,7 @@ describe('index', () => {
   });
 
   it('should be create messages by formats', (done) => {
-    Logger
-      .useName('test', 1)
-      .verbose('test message');
+    Logger.useName('test', 1).verbose('test message');
 
     expect(Logger.logname).toBe('app');
     expect(log.name).toBe('app.test');
@@ -79,7 +84,9 @@ describe('index', () => {
 
     const [message, json] = log.messages() as [string, string];
 
-    expect((/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z VERBOSE <app\.test> test message\s+.+:\d+:\d+$/).test(message)).toBe(true);
+    expect(
+      (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z VERBOSE <app\.test> test message\s+.+:\d+:\d+$/).test(message),
+    ).toBe(true);
 
     const obj = JSON.parse(json);
     expect(obj).toBeDefined();
