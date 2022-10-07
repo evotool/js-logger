@@ -1,4 +1,6 @@
-import { ANSI_COLORS_REPLACE_MASK } from './constants';
+const ANSI_COLORS_REPLACE_MASK =
+  // eslint-disable-next-line no-control-regex
+  /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 
 export function cleanText(text: string): string {
   return text.replace(ANSI_COLORS_REPLACE_MASK, '');
@@ -48,4 +50,20 @@ export function resolveSeparators(text: string, separator: string, lineLength: n
       return res.join('\n');
     })
     .join('\n');
+}
+
+export function toJson(data: object): string {
+  const cache: any[] = [];
+
+  return JSON.stringify(data, (key: string, value: any) => {
+    if (typeof value === 'object' && value) {
+      if (cache.includes(value)) {
+        return `[circular]`; // TODO: key from cache
+      }
+
+      cache.push(value);
+    }
+
+    return value as unknown;
+  });
 }

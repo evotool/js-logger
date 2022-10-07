@@ -1,29 +1,7 @@
-import type { Caller } from './caller';
-import type { LogLevel } from './constants';
+import type { Callsite } from '@evojs/callsite';
+
 import type { Log } from './log';
-
-export interface Message {
-  date: number;
-  level: LogLevel;
-  name?: string;
-  args: unknown[];
-  caller?: Caller | null;
-}
-
-export type PipeFn = (...args: any[]) => unknown;
-export type LogPipes = Readonly<Record<string, PipeFn>>;
-export type LogFormatFn = (this: LogPipes, message: Message) => unknown;
-
-export type _LoggerHandler = (log: Log) => void;
-export interface _LoggerInstance {
-  logname: string;
-  _pipes: LogPipes;
-  _formats: (string | LogFormatFn)[];
-  _debugMode: boolean;
-  _handler: _LoggerHandler;
-  _loglevelindex: number;
-  _callerLevel?: number;
-}
+import type { LogLevel } from './log-level';
 
 export interface LoggerOptions {
 
@@ -54,7 +32,20 @@ export interface LoggerOptions {
   logLevel?: LogLevel;
 
   /**
-   * Caller level
+   * Callsite depth
+   * @default 0
    */
-  callerLevel?: number;
+  callsiteDepth?: number;
 }
+
+export interface LogMessage {
+  date: number;
+  level: LogLevel;
+  name?: string;
+  args: unknown[];
+  callsite?: Callsite | null;
+}
+
+export type PipeFn = (...args: any[]) => unknown;
+export type LogPipes = Readonly<Record<string, PipeFn>>;
+export type LogFormatFn = (this: LogPipes, message: LogMessage) => unknown;

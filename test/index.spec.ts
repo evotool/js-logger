@@ -1,8 +1,8 @@
 /* eslint-disable dot-notation */
+import type { Callsite } from '@evojs/callsite';
 import { inspect } from 'util';
 
-import type { Caller } from '../src';
-import Logger, { Log } from '../src';
+import { Log, Logger } from '../src';
 
 describe('index', () => {
   let log!: Log;
@@ -16,6 +16,7 @@ describe('index', () => {
     Logger.verbose();
 
     let logger = new Logger({});
+
     // @ts-ignore
     logger._handler.call({}, new Log(undefined, [], {}, 'info', []));
     logger.critical();
@@ -25,9 +26,9 @@ describe('index', () => {
     logger.debug();
     logger.verbose();
 
-    logger = Logger.useName('test');
+    logger = Logger.setName('test');
     expect(logger.logname).toBe('test');
-    logger = logger.useName('');
+    logger = logger.setName('');
     expect(logger.logname).toBe('test');
     done();
   });
@@ -60,8 +61,8 @@ describe('index', () => {
                   : inspect(x, false, null, false))
             .join('\n');
         },
-        file({ fileName, line = 0, column = 0 }: Caller = {}): string {
-          return `${fileName}:${line}:${column}`;
+        file({ source, line = 0, column = 0 }: Callsite = {}): string {
+          return `${source}:${line}:${column}`;
         },
       },
       handler(r: Log): void {
@@ -74,21 +75,25 @@ describe('index', () => {
   });
 
   it('should be create messages by formats', (done) => {
-    Logger.useName('test', 1).verbose('test message');
+    Logger.setName('test').verbose('test message');
 
     expect(Logger.logname).toBe('app');
     expect(log.name).toBe('app.test');
 
-    const logger = Logger.useName('test');
+    const logger = Logger.setName('test');
+
     expect(logger.logname).toBe('app.test');
 
     const [message, json] = log.messages() as [string, string];
 
     expect(
-      (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z VERBOSE <app\.test> test message\s+.+:\d+:\d+$/).test(message),
+      (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z VERBOSE <app\.test> test message\s+.+:\d+:\d+$/).test(
+        message,
+      ),
     ).toBe(true);
 
     const obj = JSON.parse(json);
+
     expect(obj).toBeDefined();
     done();
   });

@@ -5,10 +5,11 @@
     "node": true
   },
   "plugins": ["@evojs"],
-  "extends": ["plugin:@evojs/recommended"],
+  "extends": ["plugin:@evojs/ecmascript"],
   "parserOptions": {
     "ecmaVersion": 2021
   },
+  "rules": {},
   "overrides": [
     {
       "files": ["**/*.ts"],
@@ -16,11 +17,12 @@
         "node": true
       },
       "plugins": ["@evojs"],
-      "extends": ["plugin:@evojs/recommended-typescript"],
+      "extends": ["plugin:@evojs/typescript"],
       "parserOptions": {
         "project": "tsconfig.json",
         "sourceType": "module"
-      }
+      },
+      "rules": {}
     }
   ]
 }

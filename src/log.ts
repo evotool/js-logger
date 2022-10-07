@@ -1,14 +1,19 @@
-import { Caller } from './caller';
-import type { LogLevel } from './constants';
-import { FORMAT_REPLACE_MASK } from './constants';
-import type { LogFormatFn, LogPipes, Message } from './types';
-import { resolveSeparators } from './utils';
+import { Callsite } from '@evojs/callsite';
+
+import type { LogLevel } from './log-level';
+import type { LogFormatFn, LogMessage, LogPipes } from './types';
+import { resolveSeparators, toJson } from './utils';
+
+const FORMAT_REPLACE_MASK =
+  /\{\{\s*([a-zA-Z_$][0-9a-zA-Z_$]+)(?:\s*\|\s*([a-zA-Z_$][0-9a-zA-Z_$]+))?\s*\}\}/g;
+
+const INTERNAL_CALLSITE_DEPTH = 3;
 
 export class Log {
   protected static lineLength: number = 0;
   static separator: string = '<-|->';
 
-  readonly caller?: Caller | null;
+  readonly callsite?: Callsite;
   readonly date: number = Date.now();
 
   constructor(
@@ -17,10 +22,9 @@ export class Log {
     readonly pipes: LogPipes,
     readonly level: LogLevel,
     readonly args: any[],
-    readonly callerLevel?: number,
+    readonly callsiteDepth: number = 0,
   ) {
-    this.caller = callerLevel! >= 0 ? Caller.create(callerLevel!) : undefined;
-    this.pipes = pipes;
+    this.callsite = Callsite.get(callsiteDepth + INTERNAL_CALLSITE_DEPTH, 1)[0];
   }
 
   /**
@@ -29,21 +33,7 @@ export class Log {
   messages(): unknown[] {
     return this.formats.map((f) => {
       if (f === 'json') {
-        const cache: any[] = [];
-        const jsonMessage = this.toMessage();
-        const out = JSON.stringify(jsonMessage, (key: string, value: any) => {
-          if (typeof value === 'object' && value) {
-            if (cache.includes(value)) {
-              return `[circular]`; // TODO: key from cache
-            }
-
-            cache.push(value);
-          }
-
-          return value as unknown;
-        });
-
-        return out;
+        return toJson(this.toMessage());
       }
 
       if (typeof f === 'function') {
@@ -55,7 +45,7 @@ export class Log {
       const stringMessage = f.replace(
         FORMAT_REPLACE_MASK,
         (_: string, propName: string, pipeName: string) => {
-          const prop = this[propName as keyof Message] as string;
+          const prop = this[propName as keyof LogMessage] as string;
 
           if (pipeName !== undefined) {
             const pipe = this.pipes[pipeName];
@@ -86,13 +76,13 @@ export class Log {
   /**
    * Get Message object.
    */
-  toMessage(): Message {
+  toMessage(): LogMessage {
     return {
       date: this.date,
       level: this.level,
       name: this.name || undefined,
       args: this.args,
-      caller: this.caller,
+      callsite: this.callsite,
     };
   }
 }
