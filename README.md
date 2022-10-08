@@ -9,14 +9,17 @@ Smart logger for nodejs
 ### Set global configuration
 
 ```typescript
-import Logger, { Caller, Level, Record } from '@evojs/logger';
+import { Callsite, Logger, Level, Record } from '@evojs/logger';
 
 const accessLogFileStream = createWriteStream(accessLogFile, { flags: 'a' });
 const errorLogFileStream = createWriteStream(errorLogFile, { flags: 'a' });
 
 Logger.configure({
   name: 'app',
-  formats: [`{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}`, 'json'],
+  formats: [
+    `{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ callsite | file }}`,
+    'json',
+  ],
   pipes: {
     uppercase(text: string): string {
       return text.toUpperCase();
@@ -28,10 +31,14 @@ Logger.configure({
       return name ? ` <${name}>` : '';
     },
     message(args: any[]): string {
-      return args.map((x) => (typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false))).join('\n');
+      return args
+        .map((x) =>
+          typeof x === 'string' ? x : x instanceof Error ? x.stack : inspect(x, false, null, false),
+        )
+        .join('\n');
     },
-    file({ fileName, line, column }: Caller): string {
-      return [fileName, line, column].filter(Boolean).join(':');
+    file({ source, line, column }: Callsite = {}): string {
+      return [source, line, column].filter(Boolean).join(':');
     },
   },
   handler(record: Record): void {
@@ -51,7 +58,9 @@ Logger.configure({
 ### Changing separator mask
 
 ```typescript
-Record.separator = '<=!=>';
+import { Logger, Log } from '@evojs/logger';
+
+Log.separator = '<=!=>';
 
 Logger.configure({
   formats: [`{{ date }}<=!=>{{ args | message }}`],
@@ -66,6 +75,8 @@ Logger.configure({
 ### Creating new logger instance
 
 ```typescript
+import { Logger } from '@evojs/logger';
+
 const logger = new Logger({ name: 'request' });
 
 export const requestLogger = responseTime((req: any, res: any, time: number) => {
@@ -74,7 +85,11 @@ export const requestLogger = responseTime((req: any, res: any, time: number) => 
     chalk.yellow(res.statusCode),
     req.url,
     chalk.yellow(time.toFixed(0) + 'ms'),
-    chalk.green(`${req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress}`),
+    chalk.green(
+      `${
+        req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress
+      }`,
+    ),
     chalk.magenta(req.headers['user-agent']),
   );
 });
