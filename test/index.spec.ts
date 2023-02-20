@@ -8,7 +8,7 @@ describe('index', () => {
   let log!: Log;
 
   it('should test all basic methods', (done) => {
-    Logger.critical();
+    Logger.fatal();
     Logger.error();
     Logger.warn();
     Logger.info();
@@ -19,7 +19,7 @@ describe('index', () => {
 
     // @ts-ignore
     logger._handler.call({}, new Log(undefined, [], {}, 'info', []));
-    logger.critical();
+    logger.fatal();
     logger.error();
     logger.warn();
     logger.info();

@@ -73,10 +73,10 @@ export class Logger {
   }
 
   /**
-   * Create critical log.
+   * Create fatal log.
    */
-  critical(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.critical, args);
+  fatal(...args: any[]): void {
+    Logger._handle(this as unknown as LoggerInstance, LogLevel.fatal, args);
   }
 
   /**
@@ -189,10 +189,10 @@ export class Logger {
   }
 
   /**
-   * Create critical log.
+   * Create fatal log.
    */
-  static critical(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.critical, args);
+  static fatal(...args: any[]): void {
+    this._handle(this as unknown as LoggerInstance, LogLevel.fatal, args);
   }
 
   /**
@@ -239,7 +239,7 @@ export class Logger {
 }
 
 process.on('uncaughtException', (err) => {
-  Logger.critical(err);
+  Logger.fatal(err);
   process.exit(0);
 });
 
