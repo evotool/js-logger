@@ -1,3 +1,4 @@
+/* eslint-disable lodash/prefer-lodash-typecheck */
 const ANSI_COLORS_REPLACE_MASK =
   // eslint-disable-next-line no-control-regex
   /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;

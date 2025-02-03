@@ -1,7 +1,7 @@
-import type { Callsite } from '@evojs/callsite';
+import { type Callsite } from '@evojs/callsite';
 
-import type { Log } from './log';
-import type { LogLevel } from './log-level';
+import { type LogLevel } from './enums';
+import { type Log } from './log';
 
 export interface LoggerOptions {
 

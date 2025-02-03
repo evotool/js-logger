@@ -1,7 +1,8 @@
+/* eslint-disable lodash/prefer-lodash-typecheck */
 import { Callsite } from '@evojs/callsite';
 
-import type { LogLevel } from './log-level';
-import type { LogFormatFn, LogMessage, LogPipes } from './types';
+import { type LogLevel } from './enums';
+import { type LogFormatFn, type LogMessage, type LogPipes } from './types';
 import { resolveSeparators, toJson } from './utils';
 
 const FORMAT_REPLACE_MASK =

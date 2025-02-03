@@ -2,7 +2,7 @@ import type { Callsite } from '@evojs/callsite';
 
 import { Log, LogLevel } from '../src';
 
-const level = LogLevel.info;
+const level = LogLevel.INFO;
 const format =
   '{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}';
 const pipes = {

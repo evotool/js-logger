@@ -1,24 +1,32 @@
+/* eslint-disable lodash/prefer-lodash-typecheck */
+import { dataToTable } from './data-to-table.function';
+import { LogLevel } from './enums';
 import { Log } from './log';
-import { LogLevel } from './log-level';
-import type { LogFormatFn, LogPipes, LoggerOptions } from './types';
+import { type LogFormatFn, type LogPipes, type LoggerOptions } from './types';
 
 const LOG_LEVELS = Object.values(LogLevel);
+const DEFAULT_LEVEL = LogLevel.INFO;
 
 export class Logger {
   static logname: string = '';
 
   private static readonly _pipes: LogPipes = {};
   private static readonly _formats: (string | LogFormatFn)[] = [];
-  private static _writing: boolean = false;
-  private static _loglevelindex: number = LOG_LEVELS.indexOf(LogLevel.verbose);
+  private static readonly _startTimes: Record<string, bigint> = {};
+  private static _loglevelindex: number = LOG_LEVELS.indexOf(LogLevel.VERBOSE);
   private static _callsiteDepth?: number;
 
+  private static _handling: boolean = false;
+
   readonly logname: string;
+
   private readonly _pipes: LogPipes = {};
   private readonly _formats: (string | LogFormatFn)[];
-  private readonly _handler: LoggerHandler;
+  private readonly _startTimes: Record<string, bigint> = {};
   private readonly _loglevelindex: number;
   private readonly _callsiteDepth?: number;
+
+  private readonly _handler: LoggerHandler;
 
   /**
    * Create new Logger with custom options
@@ -76,83 +84,100 @@ export class Logger {
    * Create fatal log.
    */
   fatal(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.fatal, args);
+    Logger.fatal.apply(this as unknown as LoggerInstance, args);
   }
 
   /**
    * Create error log.
    */
   error(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.error, args);
+    Logger.error.apply(this as unknown as LoggerInstance, args);
   }
 
   /**
    * Create warn log.
    */
   warn(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.warn, args);
+    Logger.warn.apply(this as unknown as LoggerInstance, args);
   }
 
   /**
    * Create info log.
    */
   info(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.info, args);
+    Logger.info.apply(this as unknown as LoggerInstance, args);
   }
 
   /**
    * Create debug log. Enable debug for working.
    */
   debug(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.debug, args);
+    Logger.debug.apply(this as unknown as LoggerInstance, args);
   }
 
   /**
    * Create verbose log.
    */
   verbose(...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, LogLevel.verbose, args);
+    Logger.verbose.apply(this as unknown as LoggerInstance, args);
   }
 
   /**
    * Create verbose log.
    */
-  log(level: LogLevel, name: string = this.logname, ...args: any[]): void {
-    Logger._handle(this as unknown as LoggerInstance, level, args, name);
+  log(level: LogLevel, name?: string, ...args: any[]): void {
+    Logger.log.call(this as unknown as LoggerInstance, level, name, ...args);
+  }
+
+  /**
+   * Create table log.
+   */
+  table(message: string, values: any[], level?: LogLevel): void;
+  table(values: any[], level?: LogLevel): void;
+  table(...args: any[]): void {
+    Logger.table.apply(this as unknown as LoggerInstance, args as Parameters<typeof Logger.table>);
+  }
+
+  start(label: string, level?: LogLevel): void {
+    Logger.start.call(this as unknown as LoggerInstance, label, level);
+  }
+
+  end(label: string, level?: LogLevel): void {
+    Logger.end.call(this as unknown as LoggerInstance, label, level);
   }
 
   private static _handler = (log: Log): void => {};
 
   private static _handle(
-    instance: LoggerInstance,
+    this: LoggerInstance,
     level: LogLevel,
     args: any[],
-    logname: string = instance.logname,
+    logname: string = this.logname,
   ): void {
-    if (LOG_LEVELS.indexOf(level) > instance._loglevelindex) {
+    if (LOG_LEVELS.indexOf(level) > this._loglevelindex) {
       return;
     }
 
-    if (this._writing) {
-      process.nextTick(this._handle.bind(this), instance, level, args, logname);
+    if (Logger._handling) {
+      process.nextTick(Logger._handle.bind(this), this, level, args, logname);
 
       return;
     }
 
-    this._writing = true;
+    Logger._handling = true;
 
-    const { _formats, _pipes, _handler, _callsiteDepth } = instance;
+    const { _formats, _pipes, _handler, _callsiteDepth } = this;
 
     try {
       const log = new Log(logname, _formats, _pipes, level, args, _callsiteDepth);
 
-      _handler.call(instance, log);
+      _handler.call(this, log);
     } catch (err) {
       console.error(err);
       process.exit(1);
     }
 
-    this._writing = false;
+    Logger._handling = false;
   }
 
   /**
@@ -172,7 +197,7 @@ export class Logger {
 
     Object.assign(this._pipes, options.pipes);
 
-    this._loglevelindex = LOG_LEVELS.indexOf(options.logLevel || LogLevel.verbose);
+    this._loglevelindex = LOG_LEVELS.indexOf(options.logLevel || LogLevel.VERBOSE);
   }
 
   /**
@@ -191,62 +216,116 @@ export class Logger {
   /**
    * Create fatal log.
    */
-  static fatal(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.fatal, args);
+  static fatal(...args: any[]): void;
+  static fatal(this: LoggerInstance, ...args: any[]): void {
+    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.FATAL, args);
   }
 
   /**
    * Create error log.
    */
-  static error(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.error, args);
+  static error(...args: any[]): void;
+  static error(this: LoggerInstance, ...args: any[]): void {
+    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.ERROR, args);
   }
 
   /**
    * Create warn log.
    */
-  static warn(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.warn, args);
+  static warn(...args: any[]): void;
+  static warn(this: LoggerInstance, ...args: any[]): void {
+    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.WARN, args);
   }
 
   /**
    * Create info log.
    */
-  static info(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.info, args);
+  static info(...args: any[]): void;
+  static info(this: LoggerInstance, ...args: any[]): void {
+    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.INFO, args);
   }
 
   /**
    * Create debug log.
    */
-  static debug(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.debug, args);
+  static debug(...args: any[]): void;
+  static debug(this: LoggerInstance, ...args: any[]): void {
+    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.DEBUG, args);
   }
 
   /**
    * Create verbose log.
    */
-  static verbose(...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, LogLevel.verbose, args);
+  static verbose(...args: any[]): void;
+  static verbose(this: LoggerInstance, ...args: any[]): void {
+    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.VERBOSE, args);
   }
 
   /**
    * Create any level log with custom name.
    */
-  static log(level: LogLevel, name: string = this.logname, ...args: any[]): void {
-    this._handle(this as unknown as LoggerInstance, level, args, name);
+  static log(level: LogLevel, name?: string, ...args: any[]): void;
+  static log(
+    this: LoggerInstance,
+    level: LogLevel,
+    name: string = this.logname,
+    ...args: any[]
+  ): void {
+    Logger._handle.call(this as unknown as LoggerInstance, level, args, name);
+  }
+
+  /**
+   * Create table log.
+   */
+  static table(message: string, values: any[], level?: LogLevel): void;
+  static table(values: any[], level?: LogLevel): void;
+  static table(this: LoggerInstance, ...args: any[]): void {
+    const [arg0, arg1, arg2] = args;
+
+    const [message, values, level] = (
+      typeof arg0 === 'string'
+        ? [arg0, arg1, arg2 || DEFAULT_LEVEL]
+        : [undefined, arg0, arg1 || DEFAULT_LEVEL]
+    ) as [string, any[], LogLevel];
+
+    const table = dataToTable(values);
+
+    Logger._handle.call(
+      this as unknown as LoggerInstance,
+      level,
+      message ? [message, table] : [table],
+    );
+  }
+
+  static start(label: string, level?: LogLevel): void;
+  static start(this: LoggerInstance, label: string, level: LogLevel = DEFAULT_LEVEL): void {
+    this._startTimes[label] = process.hrtime.bigint();
+
+    Logger._handle.call(this as unknown as LoggerInstance, level, [`Start of '${label}'`]);
+  }
+
+  static end(label: string, level?: LogLevel): void;
+  static end(this: LoggerInstance, label: string, level: LogLevel = DEFAULT_LEVEL): void {
+    const startTime = this._startTimes[label];
+
+    if (!startTime) {
+      throw new Error(`No such label '${label}' for Logger#end`);
+    }
+
+    const endTime = process.hrtime.bigint();
+    const delta = Number((endTime - startTime) / 1000000n);
+
+    delete this._startTimes[label];
+
+    Logger._handle.call(this as unknown as LoggerInstance, level, [`End of '${label}' (${delta}ms)`]);
   }
 }
-
-process.on('uncaughtException', (err) => {
-  Logger.fatal(err);
-  process.exit(0);
-});
 
 type LoggerHandler = (log: Log) => void;
 
 interface LoggerInstance {
   logname: string;
+  _startTimes: Record<string, bigint>;
   _pipes: LogPipes;
   _formats: (string | LogFormatFn)[];
   _debugMode: boolean;

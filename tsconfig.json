@@ -8,7 +8,7 @@
 		"moduleResolution": "node",
 		"outDir": "dist/",
 		"strict": true,
-		"target": "es5"
+		"target": "es2020"
 	},
 	"exclude": ["node_modules/", "dist/"]
 }
