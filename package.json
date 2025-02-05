@@ -1,6 +1,6 @@
 {
   "name": "@evojs/logger",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Nodejs logger",
   "license": "MIT",
   "main": "index.js",
