@@ -1,6 +1,7 @@
 /* eslint-disable lodash/prefer-lodash-typecheck */
 /* eslint-disable dot-notation */
 import { type Callsite } from '@evojs/callsite';
+import { AsyncContext } from '@evojs/context';
 import { inspect } from 'util';
 
 import { Log, Logger } from '../src';
@@ -26,6 +27,7 @@ describe('index', () => {
     logger.info();
     logger.debug();
     logger.verbose();
+    AsyncContext.create({});
     logger.start('test');
     logger.table('table', ['a', 'b', 'c']);
     logger.table(['a', 'b', 'c']);
