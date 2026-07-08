@@ -1,6 +1,6 @@
 {
   "name": "@evojs/logger",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "description": "Nodejs logger",
   "license": "MIT",
   "main": "index.js",
@@ -14,20 +14,19 @@
     "lint": "eslint \"src/**/*.ts\" -f codeframe --fix"
   },
   "dependencies": {
-    "@evojs/callsite": "^0.3.0",
-    "@evojs/context": "^4.0.0"
+    "@evojs/callsite": "^0.3.0"
   },
   "devDependencies": {
-    "@evojs/eslint-plugin": "~7.1.0",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^20.19.1",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
-    "eslint": "^8.57.1",
-    "glob": "^9.3.5",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.4.0",
-    "typescript": "^5.8.3"
+    "@evojs/eslint-plugin": "~8.0.11",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.13.2",
+    "@typescript-eslint/eslint-plugin": "^8.63.0",
+    "@typescript-eslint/parser": "^8.63.0",
+    "eslint": "^9.39.4",
+    "glob": "^13.0.6",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": "^10.12.0 || >=12.0.0"
@@ -45,12 +44,12 @@
     "testEnvironment": "node",
     "testRegex": ".spec.ts$",
     "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "globals": {
-      "ts-jest": {
-        "tsconfig": "tsconfig.spec.json"
-      }
+      "^.+\\.(ts|js)$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.spec.json"
+        }
+      ]
     }
   },
   "author": {

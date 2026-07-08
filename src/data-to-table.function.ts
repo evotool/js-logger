@@ -14,5 +14,5 @@ const logger = new Console({ stdout, colorMode: false });
 export function dataToTable(data: any): string {
   logger.table(data);
 
-  return `\n${(stdout.read() as Buffer | null)?.toString('utf-8') || ''}`;
+  return `\n${(stdout.read() as Buffer).toString('utf-8')}`;
 }

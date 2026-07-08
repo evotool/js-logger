@@ -38,7 +38,7 @@ describe('log', () => {
     expect(jsonMessage).toBeTruthy();
     expect(() => {
       JSON.parse(jsonMessage);
-    }).not.toThrowError();
+    }).not.toThrow();
     expect(
       (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z INFO <app\.test> test message\s*(?:.+:\d+:\d+)?$/).test(
         consoleMessage,
@@ -51,7 +51,7 @@ describe('log', () => {
 
     expect(() => {
       log.messages();
-    }).toThrowError(TypeError);
+    }).toThrow(TypeError);
   });
 
   it('should return prop without pipe', () => {
@@ -61,7 +61,7 @@ describe('log', () => {
     expect(message).toBe(level);
   });
 
-  it('should return prop without pipe', () => {
+  it('should return prop with separator and zero lineLength', () => {
     const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, []);
 
     Object.defineProperty(Log, 'lineLength', {

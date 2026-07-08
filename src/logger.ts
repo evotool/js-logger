@@ -1,6 +1,4 @@
 /* eslint-disable lodash/prefer-lodash-typecheck */
-import { AsyncContext } from '@evojs/context';
-
 import { dataToTable } from './data-to-table.function';
 import { LogLevel } from './enums';
 import { Log } from './log';
@@ -140,12 +138,8 @@ export class Logger {
     Logger.table.apply(this as unknown as LoggerInstance, args as Parameters<typeof Logger.table>);
   }
 
-  start(label: string, level?: LogLevel): void {
-    Logger.start.call(this as unknown as LoggerInstance, label, level);
-  }
-
-  end(label: string, level?: LogLevel): void {
-    Logger.end.call(this as unknown as LoggerInstance, label, level);
+  time(label: string, level?: LogLevel): (info?: string) => void {
+    return Logger.time.call(this as unknown as LoggerInstance, label, level);
   }
 
   private static _handler = (log: Log): void => {};
@@ -161,7 +155,7 @@ export class Logger {
     }
 
     if (Logger._handling) {
-      process.nextTick(Logger._handle.bind(this), this, level, args, logname);
+      process.nextTick(Logger._handle.bind(this), level, args, logname);
 
       return;
     }
@@ -287,8 +281,8 @@ export class Logger {
     const [message, values, level] = (
       typeof arg0 === 'string'
         ? [arg0, arg1, arg2 || DEFAULT_LEVEL]
-        : [undefined, arg0, arg1 || DEFAULT_LEVEL]
-    ) as [string, any[], LogLevel];
+        : ['', arg0, arg1 || DEFAULT_LEVEL]
+    ) satisfies [string, any[], LogLevel];
 
     const table = dataToTable(values);
 
@@ -299,43 +293,24 @@ export class Logger {
     );
   }
 
-  static start(label: string, level?: LogLevel): void;
-  static start(this: LoggerInstance, label: string, level: LogLevel = DEFAULT_LEVEL): void {
-    const asyncContext = AsyncContext.get();
-
-    if (!asyncContext) {
-      throw new Error(`AsyncContext is not available`);
-    }
-
-    const { traceId } = asyncContext;
-
-    this._startTimes[`${label}_${traceId}`] = process.hrtime.bigint();
+  static time(label: string, level?: LogLevel): (info?: string) => void;
+  static time(
+    this: LoggerInstance,
+    label: string,
+    level: LogLevel = DEFAULT_LEVEL,
+  ): (info?: string) => void {
+    const startTime = process.hrtime.bigint();
 
     Logger._handle.call(this as unknown as LoggerInstance, level, [`Start of '${label}'`]);
-  }
 
-  static end(label: string, level?: LogLevel): void;
-  static end(this: LoggerInstance, label: string, level: LogLevel = DEFAULT_LEVEL): void {
-    const asyncContext = AsyncContext.get();
+    return (info?: string): void => {
+      const endTime = process.hrtime.bigint();
+      const delta = Number((endTime - startTime) / 1000000n);
 
-    if (!asyncContext) {
-      throw new Error(`AsyncContext is not available`);
-    }
-
-    const { traceId } = asyncContext;
-
-    const startTime = this._startTimes[`${label}_${traceId}`];
-
-    if (!startTime) {
-      throw new Error(`No such label '${label}' for Logger#end`);
-    }
-
-    const endTime = process.hrtime.bigint();
-    const delta = Number((endTime - startTime) / 1000000n);
-
-    delete this._startTimes[`${label}_${traceId}`];
-
-    Logger._handle.call(this as unknown as LoggerInstance, level, [`End of '${label}' (${delta}ms)`]);
+      Logger._handle.call(this as unknown as LoggerInstance, level, [
+        `End of '${label}' (${delta}ms)${info ? `: ${info}` : ''}`,
+      ]);
+    };
   }
 }
 
@@ -343,7 +318,6 @@ type LoggerHandler = (log: Log) => void;
 
 interface LoggerInstance {
   logname: string;
-  _startTimes: Record<string, bigint>;
   _pipes: LogPipes;
   _formats: (string | LogFormatFn)[];
   _debugMode: boolean;
