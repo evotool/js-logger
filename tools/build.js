@@ -1,3 +1,5 @@
+'use strict';
+
 const { sync } = require('glob');
 const { writeFileSync, readFileSync, copyFileSync } = require('node:fs');
 const { resolve } = require('node:path');
