@@ -35,7 +35,7 @@ export interface LoggerOptions {
    * Callsite depth
    * @default 0
    */
-  callsiteDepth?: number;
+  callsiteLevel?: number;
 }
 
 export interface LogMessage {

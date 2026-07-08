@@ -1,4 +1,4 @@
-import type { Callsite } from '@evojs/callsite';
+import { type Callsite } from '@evojs/callsite';
 
 import { Log, LogLevel } from '../src';
 
@@ -31,7 +31,7 @@ const pipes = {
 
 describe('log', () => {
   it('should create new log and resolve messages', () => {
-    const log = new Log('app.test', ['json', format], pipes, level, ['test', 'message']);
+    const log = new Log('app.test', ['json', format], pipes, level, ['test', 'message'], 0);
 
     const [jsonMessage, consoleMessage] = log.messages() as [string, string];
 
@@ -47,7 +47,7 @@ describe('log', () => {
   });
 
   it('should throw error of undefined pipe', () => {
-    const log = new Log(undefined, ['{{ date | ts }}'], pipes, level, ['test', 'message']);
+    const log = new Log(undefined, ['{{ date | ts }}'], pipes, level, ['test', 'message'], 0);
 
     expect(() => {
       log.messages();
@@ -55,14 +55,14 @@ describe('log', () => {
   });
 
   it('should return prop without pipe', () => {
-    const log = new Log(undefined, ['{{ level }}'], {}, level, ['test', 'message']);
+    const log = new Log(undefined, ['{{ level }}'], {}, level, ['test', 'message'], 0);
     const [message] = log.messages();
 
     expect(message).toBe(level);
   });
 
   it('should return prop with separator and zero lineLength', () => {
-    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, []);
+    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, [], 0);
 
     Object.defineProperty(Log, 'lineLength', {
       get: () => 0,
@@ -80,7 +80,7 @@ describe('log', () => {
   });
 
   it('should return message with linebreak', () => {
-    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, []);
+    const log = new Log(undefined, ['{{ level }}<-|->{{ level }}'], {}, level, [], 0);
     const [message] = log.messages() as [string];
     const regex = new RegExp(`^${level}\\s+${level}$`);
 
@@ -92,7 +92,7 @@ describe('log', () => {
 
     circular.circular = circular;
 
-    const log = new Log(undefined, ['json'], {}, level, [circular]);
+    const log = new Log(undefined, ['json'], {}, level, [circular], 0);
     const [jsonMessage] = log.messages() as [string];
     const json = JSON.parse(jsonMessage);
 

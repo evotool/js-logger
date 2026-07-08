@@ -1,7 +1,7 @@
 /* eslint-disable lodash/prefer-lodash-typecheck */
-/* eslint-disable dot-notation */
+
 import { type Callsite } from '@evojs/callsite';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
 import { Log, Logger } from '../src';
 
@@ -26,6 +26,7 @@ describe('index', () => {
     logger.info();
     logger.debug();
     logger.verbose();
+
     const timeEnd = logger.time('test');
     logger.table('table', ['a', 'b', 'c']);
     logger.table(['a', 'b', 'c']);
@@ -44,7 +45,7 @@ describe('index', () => {
     Logger.configure({
       name: 'app',
       formats: [
-        `{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}`,
+        '{{ date | date }} {{ level | uppercase }}{{ name | name }} {{ args | message }}<-|->{{ caller | file }}',
         'json',
       ],
       pipes: {

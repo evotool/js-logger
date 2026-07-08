@@ -12,9 +12,8 @@ export class Logger {
 
   private static readonly _pipes: LogPipes = {};
   private static readonly _formats: (string | LogFormatFn)[] = [];
-  private static readonly _startTimes: Record<string, bigint> = {};
-  private static _loglevelindex: number = LOG_LEVELS.indexOf(LogLevel.VERBOSE);
-  private static _callsiteDepth?: number;
+  private static _logLevelIndex: number = LOG_LEVELS.indexOf(LogLevel.VERBOSE);
+  private static _callsiteLevel: number = 0;
 
   private static _handling: boolean = false;
 
@@ -22,9 +21,8 @@ export class Logger {
 
   private readonly _pipes: LogPipes = {};
   private readonly _formats: (string | LogFormatFn)[];
-  private readonly _startTimes: Record<string, bigint> = {};
-  private readonly _loglevelindex: number;
-  private readonly _callsiteDepth?: number;
+  private readonly _logLevelIndex: number;
+  private readonly _callsiteLevel?: number;
 
   private readonly _handler: LoggerHandler;
 
@@ -37,14 +35,14 @@ export class Logger {
       formats = Logger._formats,
       handler = Logger._handler,
       logLevel,
-      callsiteDepth,
+      callsiteLevel,
     } = options;
 
     this.logname = name;
     this._formats = formats;
     this._handler = handler;
-    this._callsiteDepth = callsiteDepth ?? Logger._callsiteDepth;
-    this._loglevelindex = logLevel ? LOG_LEVELS.indexOf(logLevel) : Logger._loglevelindex;
+    this._callsiteLevel = callsiteLevel ?? Logger._callsiteLevel;
+    this._logLevelIndex = logLevel ? LOG_LEVELS.indexOf(logLevel) : Logger._logLevelIndex;
 
     Object.assign(this._pipes, Logger._pipes, options.pipes);
   }
@@ -75,8 +73,8 @@ export class Logger {
       formats: this._formats,
       pipes: this._pipes,
       handler: this._handler,
-      logLevel: LOG_LEVELS[this._loglevelindex],
-      callsiteDepth: this._callsiteDepth,
+      logLevel: LOG_LEVELS[this._logLevelIndex],
+      callsiteLevel: this._callsiteLevel,
     });
   }
 
@@ -150,7 +148,7 @@ export class Logger {
     args: any[],
     logname: string = this.logname,
   ): void {
-    if (LOG_LEVELS.indexOf(level) > this._loglevelindex) {
+    if (LOG_LEVELS.indexOf(level) > this._logLevelIndex) {
       return;
     }
 
@@ -162,10 +160,10 @@ export class Logger {
 
     Logger._handling = true;
 
-    const { _formats, _pipes, _handler, _callsiteDepth } = this;
+    const { _formats, _pipes, _handler, _callsiteLevel } = this;
 
     try {
-      const log = new Log(logname, _formats, _pipes, level, args, _callsiteDepth);
+      const log = new Log(logname, _formats, _pipes, level, args, _callsiteLevel);
 
       _handler.call(this, log);
     } catch (err) {
@@ -181,7 +179,7 @@ export class Logger {
    */
   static configure(options: LoggerOptions): void {
     this.logname = options.name || '';
-    this._callsiteDepth = options.callsiteDepth;
+    this._callsiteLevel = options.callsiteLevel || 0;
 
     if (Array.isArray(options.formats)) {
       this._formats.splice(0, this._formats.length, ...options.formats);
@@ -193,7 +191,7 @@ export class Logger {
 
     Object.assign(this._pipes, options.pipes);
 
-    this._loglevelindex = LOG_LEVELS.indexOf(options.logLevel || LogLevel.VERBOSE);
+    this._logLevelIndex = LOG_LEVELS.indexOf(options.logLevel || LogLevel.VERBOSE);
   }
 
   /**
@@ -214,7 +212,7 @@ export class Logger {
    */
   static fatal(...args: any[]): void;
   static fatal(this: LoggerInstance, ...args: any[]): void {
-    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.FATAL, args);
+    Logger._handle.call(this, LogLevel.FATAL, args);
   }
 
   /**
@@ -222,7 +220,7 @@ export class Logger {
    */
   static error(...args: any[]): void;
   static error(this: LoggerInstance, ...args: any[]): void {
-    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.ERROR, args);
+    Logger._handle.call(this, LogLevel.ERROR, args);
   }
 
   /**
@@ -230,7 +228,7 @@ export class Logger {
    */
   static warn(...args: any[]): void;
   static warn(this: LoggerInstance, ...args: any[]): void {
-    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.WARN, args);
+    Logger._handle.call(this, LogLevel.WARN, args);
   }
 
   /**
@@ -238,7 +236,7 @@ export class Logger {
    */
   static info(...args: any[]): void;
   static info(this: LoggerInstance, ...args: any[]): void {
-    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.INFO, args);
+    Logger._handle.call(this, LogLevel.INFO, args);
   }
 
   /**
@@ -246,7 +244,7 @@ export class Logger {
    */
   static debug(...args: any[]): void;
   static debug(this: LoggerInstance, ...args: any[]): void {
-    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.DEBUG, args);
+    Logger._handle.call(this, LogLevel.DEBUG, args);
   }
 
   /**
@@ -254,7 +252,7 @@ export class Logger {
    */
   static verbose(...args: any[]): void;
   static verbose(this: LoggerInstance, ...args: any[]): void {
-    Logger._handle.call(this as unknown as LoggerInstance, LogLevel.VERBOSE, args);
+    Logger._handle.call(this, LogLevel.VERBOSE, args);
   }
 
   /**
@@ -267,7 +265,7 @@ export class Logger {
     name: string = this.logname,
     ...args: any[]
   ): void {
-    Logger._handle.call(this as unknown as LoggerInstance, level, args, name);
+    Logger._handle.call(this, level, args, name);
   }
 
   /**
@@ -286,11 +284,7 @@ export class Logger {
 
     const table = dataToTable(values);
 
-    Logger._handle.call(
-      this as unknown as LoggerInstance,
-      level,
-      message ? [message, table] : [table],
-    );
+    Logger._handle.call(this, level, message ? [message, table] : [table]);
   }
 
   static time(label: string, level?: LogLevel): (info?: string) => void;
@@ -301,15 +295,20 @@ export class Logger {
   ): (info?: string) => void {
     const startTime = process.hrtime.bigint();
 
-    Logger._handle.call(this as unknown as LoggerInstance, level, [`Start of '${label}'`]);
+    Logger._handle.call(this, level, [`Start of '${label}'`]);
 
     return (info?: string): void => {
       const endTime = process.hrtime.bigint();
       const delta = Number((endTime - startTime) / 1000000n);
 
-      Logger._handle.call(this as unknown as LoggerInstance, level, [
-        `End of '${label}' (${delta}ms)${info ? `: ${info}` : ''}`,
-      ]);
+      Logger._handle.call(
+        {
+          ...this,
+          _callsiteLevel: this._callsiteLevel - 1,
+        },
+        level,
+        [`End of '${label}' (${delta}ms)${info ? `: ${info}` : ''}`],
+      );
     };
   }
 }
@@ -322,7 +321,6 @@ interface LoggerInstance {
   _formats: (string | LogFormatFn)[];
   _debugMode: boolean;
   _handler: LoggerHandler;
-  _loglevelindex: number;
-  _callerLevel?: number;
-  _callsiteDepth?: number;
+  _logLevelIndex: number;
+  _callsiteLevel: number;
 }

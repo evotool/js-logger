@@ -59,7 +59,7 @@ export function toJson(data: object): string {
   return JSON.stringify(data, (key: string, value: any) => {
     if (typeof value === 'object' && value) {
       if (cache.includes(value)) {
-        return `[circular]`; // TODO: key from cache
+        return '[circular]'; // TODO: key from cache
       }
 
       cache.push(value);

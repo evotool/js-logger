@@ -1,8 +1,6 @@
-/* eslint-disable lodash/prefer-lodash-typecheck */
-/* eslint-disable dot-notation */
 import { Log, Logger } from '../src';
-import { LogLevel } from '../src/enums';
 import { dataToTable } from '../src/data-to-table.function';
+import { LogLevel } from '../src/enums';
 
 describe('Logger (extended)', () => {
   beforeEach(() => {
@@ -84,6 +82,7 @@ describe('Logger (extended)', () => {
         name: 'recursion',
         handler: () => {
           results.push('handler');
+
           if (handlerCalls++ === 0) {
             Logger.info('nested');
           }
@@ -123,7 +122,7 @@ describe('Logger (extended)', () => {
     });
   });
 
-  describe('Log with callsiteDepth', () => {
+  describe('Log with callsiteLevel', () => {
     it('should not throw when depth > 0', () => {
       const log = new Log('test', [], {}, LogLevel.INFO, [], 1);
 
@@ -202,11 +201,11 @@ describe('Logger (extended)', () => {
 
   describe('Log with function format', () => {
     it('should use function format', () => {
-      const format = function (this: Record<string, unknown>, msg: any): string {
+      const format = function format(this: Record<string, unknown>, msg: any): string {
         return `formatted:${msg.level}`;
       };
 
-      const log = new Log('test', [format], {}, LogLevel.INFO, ['arg']);
+      const log = new Log('test', [format], {}, LogLevel.INFO, ['arg'], 0);
       const messages = log.messages();
 
       expect(messages).toEqual(['formatted:info']);

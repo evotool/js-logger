@@ -8,7 +8,7 @@ import { resolveSeparators, toJson } from './utils';
 const FORMAT_REPLACE_MASK =
   /\{\{\s*([a-zA-Z_$][0-9a-zA-Z_$]+)(?:\s*\|\s*([a-zA-Z_$][0-9a-zA-Z_$]+))?\s*\}\}/g;
 
-const INTERNAL_CALLSITE_DEPTH = 2;
+const INTERNAL_CALLSITE_LEVEL = 2;
 
 export class Log {
   protected static lineLength: number = 0;
@@ -23,11 +23,13 @@ export class Log {
     readonly pipes: LogPipes,
     readonly level: LogLevel,
     readonly args: any[],
-    readonly callsiteDepth: number = 0,
+    readonly callsiteLevel: number,
   ) {
-    if (callsiteDepth > 0) {
-      this.callsite = Callsite.get(callsiteDepth + INTERNAL_CALLSITE_DEPTH, 1)[0];
+    if (callsiteLevel <= 0) {
+      return;
     }
+
+    this.callsite = Callsite.get(INTERNAL_CALLSITE_LEVEL + callsiteLevel, 1)[0];
   }
 
   /**
